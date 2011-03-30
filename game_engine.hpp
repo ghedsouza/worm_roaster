@@ -3,6 +3,10 @@
 
 #include <gtkmm.h>
 #include <time.h>
+#include <algorithm>
+#include <cstdib>
+
+#include "algebra.hpp"
 
 #define NUM_WORMS (4)
 #define TICK_SPEED 100;
@@ -13,7 +17,8 @@ static int clock_seconds()
 }
 
 struct worm {
-  double x, y;
+  int valid;
+  double x, y, z;
 };
 
 struct game_engine {
@@ -27,9 +32,19 @@ struct game_engine {
   int num_worms;
   worm worms[NUM_WORMS];
   
-  bool tick()
+  void tick()
   {
-    return true;
+    if (clock_seconds() > 2) num_worms = max(num_worms, 1);
+    for(int i=0; i<num_worms; i++) {
+      if (!worms[i].valid) {
+        worms[i].valid = 1;
+        worms[i].x = -ground.width + (rand() % (2*ground.width));
+        worms[i].z = -ground.length + (rand() % (2*ground.length));
+        worms[i].y = 0;
+      } else {
+            
+      }
+    }
   }
   
   game_engine() {

@@ -158,6 +158,7 @@ void Viewer::drawBorder()
 
 void Viewer::tick()
 {
+  eng.tick();
   int res = game.tick();
   if (res > 0) {
     completed_rows += res;
