@@ -102,44 +102,44 @@ void Viewer::on_realize()
   gldrawable->gl_end();
 }
 
-void Viewer::drawCube(int x, int y)
+void Viewer::drawCube(double x, double y, double z)
 {
   glBegin(GL_QUADS);
   if (multi) glColor3d(multi_colours[0][0],multi_colours[0][1], multi_colours[0][2]);
-  glVertex3d(x, y, 0);
-  glVertex3d(x+1, y, 0);
-  glVertex3d(x+1, y+1, 0);
-  glVertex3d(x, y+1, 0);
+  glVertex3d(x, y, z);
+  glVertex3d(x+1, y, z);
+  glVertex3d(x+1, y+1, z);
+  glVertex3d(x, y+1, z);
   
   if (multi) glColor3d(multi_colours[1][0],multi_colours[1][1], multi_colours[1][2]);  
-  glVertex3d(x, y, 1);
-  glVertex3d(x+1, y, 1);
-  glVertex3d(x+1, y+1, 1);
-  glVertex3d(x, y+1, 1);
+  glVertex3d(x, y, z+1);
+  glVertex3d(x+1, y, z+1);
+  glVertex3d(x+1, y+1, z+1);
+  glVertex3d(x, y+1, z+1);
   
   if (multi) glColor3d(multi_colours[2][0],multi_colours[2][1], multi_colours[2][2]);
-  glVertex3d(x, y+1, 0);
-  glVertex3d(x+1, y+1, 0);
-  glVertex3d(x+1, y+1, 1);
-  glVertex3d(x, y+1, 1);
+  glVertex3d(x, y+1, z);
+  glVertex3d(x+1, y+1, z);
+  glVertex3d(x+1, y+1, z+1);
+  glVertex3d(x, y+1, z+1);
   
   if (multi) glColor3d(multi_colours[3][0],multi_colours[3][1], multi_colours[3][2]);
-  glVertex3d(x, y, 0);
-  glVertex3d(x+1, y, 0);
-  glVertex3d(x+1, y, 1);
-  glVertex3d(x, y, 1);
+  glVertex3d(x, y, z);
+  glVertex3d(x+1, y, z);
+  glVertex3d(x+1, y, z+1);
+  glVertex3d(x, y, z+1);
   
   if (multi) glColor3d(multi_colours[4][0],multi_colours[4][1], multi_colours[4][2]);
-  glVertex3d(x, y, 0);
-  glVertex3d(x, y, 1);
-  glVertex3d(x, y+1, 1);
-  glVertex3d(x, y+1, 0);
+  glVertex3d(x, y, z);
+  glVertex3d(x, y, z+1);
+  glVertex3d(x, y+1, z+1);
+  glVertex3d(x, y+1, z);
   
   if (multi) glColor3d(multi_colours[5][0],multi_colours[5][1], multi_colours[5][2]);
-  glVertex3d(x+1, y, 0);
-  glVertex3d(x+1, y, 1);
-  glVertex3d(x+1, y+1, 1);
-  glVertex3d(x+1, y+1, 0);
+  glVertex3d(x+1, y, z);
+  glVertex3d(x+1, y, z+1);
+  glVertex3d(x+1, y+1, z+1);
+  glVertex3d(x+1, y+1, z);
     
   glEnd();
 }
@@ -148,11 +148,11 @@ void Viewer::drawBorder()
 {
   glColor3d(0.3,0.3,0.3);
   for(int y=-1;y<HEIGHT;y+=1) {
-    drawCube(-1,y);
-    drawCube(WIDTH,y);
+    drawCube(-1,y,0);
+    drawCube(WIDTH,y,0);
   }
   for(int x=0;x<WIDTH;x+=1) {
-    drawCube(x,-1);
+    drawCube(x,-1,0);
   }
 }
 
@@ -198,7 +198,7 @@ void Viewer::drawGame()
         break;
       }
       if(cell >= 0)
-      drawCube(c,r);
+      drawCube(c,r,0);
     }
   }
 }
@@ -300,11 +300,14 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 
   // draw base
   glColor3d(0.0, 0.0, 0.0);
-  drawCube(eng.base.pos.x,eng.base.pos.y);
+  drawCube(eng.base.pos.x,eng.base.pos.y, eng.base.pos.z);
   
   // draw worms
+  glColor3d(1.0, 0.0, 0.0);  
   for(int i=0; i<eng.num_worms; i++) {
-    
+    //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
+    drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
+  }
   
   
   // Not implemented: actually draw the current game state.

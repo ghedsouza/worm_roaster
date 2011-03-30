@@ -54,7 +54,7 @@ protected:
 
 private:
   void set_config();
-  void drawCube(int,int);
+  void drawCube(double,double,double);
   void drawBorder();
   bool rot_tick();
   void drawGame();
