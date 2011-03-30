@@ -4,6 +4,7 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include "game.hpp"
+#include "game_engine.hpp"
 
 #define SCALE (50)
 #define HEIGHT (20)
@@ -62,7 +63,6 @@ private:
   unsigned int last_motion_time;
   int last_motion_diff, last_motion_button[3];
   int shift, scale;
-  int do_double_buf;
   Game game;
   
   sigc::connection rot_tick_conn;
@@ -70,6 +70,7 @@ private:
   int multi;
   
   double multi_colours[6][3];
+  game_engine eng;
 };
 
 #endif

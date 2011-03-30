@@ -68,17 +68,20 @@ update_speed(0)
 
   // Put the viewer below the menubar. pack_start "grows" the widget
   // by default, so it'll take up the rest of the window.
-  m_viewer.set_size_request(300, 600);
+  m_viewer.set_size_request(600, 600);
   m_vbox.pack_start(m_viewer);
 
   show_all();
   
   Glib::signal_timeout().connect(
-    sigc::mem_fun(*this, &AppWindow::tick), base_speed);
+    sigc::mem_fun(*this, &AppWindow::tick), 100);
 }
 
 bool AppWindow::tick()
 {
+  m_viewer.tick();
+  return true;
+  
   if (game_started) {
     m_viewer.tick();
     if (comp_rows < m_viewer.completed_rows || update_speed)
@@ -107,7 +110,6 @@ void AppWindow::newgame()
 
 void AppWindow::double_buf(int do_double_buffer)
 {
-  m_viewer.double_buf(do_double_buffer);
 }
 
 void AppWindow::slow_toggle()

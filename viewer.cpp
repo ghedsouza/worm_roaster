@@ -5,16 +5,17 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "game_engine.hpp"
+
 Viewer::Viewer() :
 completed_rows(0),
 mouse_x(0),
 mouse_y(0),
-x_rot_angle(0),
+x_rot_angle(55),
 y_rot_angle(0),
 z_rot_angle(0),
 shift(0),
 scale(SCALE),
-do_double_buf(0),
 game(WIDTH, HEIGHT),
 rot_tick_conn_valid(0),
 multi(0)
@@ -56,10 +57,6 @@ void Viewer::set_config()
   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB |
                                      Gdk::GL::MODE_DEPTH |
                                      Gdk::GL::MODE_DOUBLE);
-  if (do_double_buf)
-    glDrawBuffer(GL_BACK);
-  else
-    glDrawBuffer(GL_FRONT);
     
   if (glconfig == 0) {
     // If we can't get this configuration, die
@@ -249,18 +246,10 @@ void Viewer::reset_game()
 
 void Viewer::double_buf(int double_buffer)
 {
-  do_double_buf = double_buffer;
-  invalidate();
 }
 
 bool Viewer::on_expose_event(GdkEventExpose* event)
-{
-
-  if (do_double_buf)
-    glDrawBuffer(GL_BACK);
-  else
-    glDrawBuffer(GL_FRONT);
-    
+{    
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
     
   if (!gldrawable) return false;
@@ -268,15 +257,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   if (!gldrawable->gl_begin(get_gl_context()))
     return false;
   
-  //std::cout << "mode: " << gldrawable->is_double_buffered() << "\n";
-  
-  // Clear the screen
-
-  if (do_double_buf)
-    glDrawBuffer(GL_BACK);
-  else
-    glDrawBuffer(GL_FRONT);
-    
+  // Clear the screen    
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // Modify the current projection matrix so that we move the 
@@ -304,33 +285,27 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   // 10 and height 24 (game = 20, stripe = 4).  Let's translate
   // the game so that we can draw it starting at (0,0) but have
   // it appear centered in the window.
-  glTranslated(-5.0, -12.0, 0.0);
-
+  glTranslated(0.0, -12.0, 0.0);
+  
+  
+  // draw ground
+  glColor3d(112.0/255, 64.0/255, 0.0/255);
+  glBegin(GL_QUADS);
+  glVertex3d(-eng.ground.width,0,-eng.ground.length);
+  glVertex3d(-eng.ground.width,0,eng.ground.length);
+  glVertex3d(eng.ground.width,0,eng.ground.length);  
+  glVertex3d(eng.ground.width,0,-eng.ground.length);
+  glEnd();
+  
+  
   // Not implemented: actually draw the current game state.
   // Here's some test code that draws red triangles at the
   // corners of the game board.
-  glColor3d(1.0, 0.0, 0.0);
-
-  glBegin(GL_TRIANGLES);
-  glVertex3d(0.0, 0.0, 0.0);
-  glVertex3d(1.0, 0.0, 0.0);
-  glVertex3d(0.0, 1.0, 0.0);
-
-  glVertex3d(9.0, 0.0, 0.0);
-  glVertex3d(10.0, 0.0, 0.0);
-  glVertex3d(10.0, 1.0, 0.0);
-
-  glVertex3d(0.0, 19.0, 0.0);
-  glVertex3d(1.0, 20.0, 0.0);
-  glVertex3d(0.0, 20.0, 0.0);
-
-  glVertex3d(10.0, 19.0, 0.0);
-  glVertex3d(10.0, 20.0, 0.0);
-  glVertex3d(9.0, 20.0, 0.0);
-  glEnd();
+  glColor3d(0.0, 0.0, 0.0);
+  drawCube(eng.base.x,eng.base.y);
   
-  drawBorder();
-  drawGame();
+//  drawBorder();
+//  drawGame();
 
   // We pushed a matrix onto the PROJECTION stack earlier, we 
   // need to pop it.
@@ -340,12 +315,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 
   // Swap the contents of the front and back buffers so we see what we
   // just drew. This should only be done if double buffering is enabled.
-  if (do_double_buf) {
-    gldrawable->swap_buffers();
-    gldrawable->gl_end();
-  } else {
-    glFlush();
-  } 
+  gldrawable->swap_buffers();
+  gldrawable->gl_end();
    
   return true;
 }
