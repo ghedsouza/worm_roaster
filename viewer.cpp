@@ -297,13 +297,20 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   glVertex3d(eng.ground.width,0,eng.ground.length);  
   glVertex3d(eng.ground.width,0,-eng.ground.length);
   glEnd();
+
+  // draw base
+  glColor3d(0.0, 0.0, 0.0);
+  drawCube(eng.base.pos.x,eng.base.pos.y);
+  
+  // draw worms
+  for(int i=0; i<eng.num_worms; i++) {
+    
   
   
   // Not implemented: actually draw the current game state.
   // Here's some test code that draws red triangles at the
   // corners of the game board.
   glColor3d(0.0, 0.0, 0.0);
-  drawCube(eng.base.x,eng.base.y);
   
 //  drawBorder();
 //  drawGame();

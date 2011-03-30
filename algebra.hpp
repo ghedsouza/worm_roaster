@@ -65,19 +65,20 @@ private:
 class Point3D
 {
 public:
-  Point3D()
+  double &x, &y, &z;
+  Point3D() : x(v_[0]), y(v_[1]), z(v_[2])
   {
     v_[0] = 0.0;
     v_[1] = 0.0;
     v_[2] = 0.0;
   }
-  Point3D(double x, double y, double z)
+  Point3D(double x, double y, double z) : x(v_[0]), y(v_[1]), z(v_[2])
   { 
     v_[0] = x;
     v_[1] = y;
     v_[2] = z;
   }
-  Point3D(const Point3D& other)
+  Point3D(const Point3D& other) : x(v_[0]), y(v_[1]), z(v_[2])
   {
     v_[0] = other.v_[0];
     v_[1] = other.v_[1];

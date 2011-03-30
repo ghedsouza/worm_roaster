@@ -1,5 +1,7 @@
-#include "appwindow.hpp"
 #include <iostream>
+
+#include "appwindow.hpp"
+#include "game_engine.hpp"
 
 AppWindow::AppWindow() :
 ag(Gtk::AccelGroup::create()),
@@ -8,7 +10,7 @@ m_medium(speed_group, "Medium"),
 m_fast(speed_group, "Fast"),
 m_double("Double Buffer"),
 game_started(0),
-base_speed(SLOW_SPEED),
+base_speed(TICK_SPEED),
 update_speed(0)
 {
   set_title("488 Tetrominoes on the Wall");
