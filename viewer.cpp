@@ -7,6 +7,53 @@
 
 #include "game_engine.hpp"
 
+static int tid = 1;
+
+/*  Create checkerboard texture  */
+#define checkImageWidth 64
+#define checkImageHeight 64
+static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
+
+static GLuint texName;
+
+void makeCheckImage(void)
+{
+   int i, j, c;
+    
+   for (i = 0; i < checkImageHeight; i++) {
+      for (j = 0; j < checkImageWidth; j++) {
+         c = ((((i&0x8)==0)^((j&0x8))==0))*255;
+         checkImage[i][j][0] = (GLubyte) c;
+         checkImage[i][j][1] = (GLubyte) c;
+         checkImage[i][j][2] = (GLubyte) c;
+         checkImage[i][j][3] = (GLubyte) 255;
+      }
+   }
+}
+
+void init(void)
+{    
+   glClearColor (0.0, 0.0, 0.0, 0.0);
+   glShadeModel(GL_FLAT);
+   glEnable(GL_DEPTH_TEST);
+
+   makeCheckImage();
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+   glGenTextures(1, &texName);
+   glBindTexture(GL_TEXTURE_2D, texName);
+
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+                   GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+                   GL_NEAREST);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, 
+                checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 
+                checkImage);
+}
+
 Viewer::Viewer() :
 completed_rows(0),
 mouse_x(0),
@@ -66,6 +113,9 @@ void Viewer::set_config()
 
   // Accept the configuration
   set_gl_capability(glconfig);
+  
+  init();
+  cout << "a";
 }
 
 Viewer::~Viewer()
@@ -95,10 +145,12 @@ void Viewer::on_realize()
   if (!gldrawable->gl_begin(get_gl_context()))
     return;
   
+  init();
+  
   // Just enable depth testing and set the background colour.
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.7, 0.7, 1.0, 0.0);
-
+  
   gldrawable->gl_end();
 }
 
@@ -271,7 +323,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-
+  
+  glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   // Not implemented: set up lighting (if necessary)
 
   // Not implemented: scale and rotate the scene
@@ -289,14 +342,39 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   glTranslated(0.0, -12.0, 0.0);
   
   
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glEnable(GL_TEXTURE_2D);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+   glBindTexture(GL_TEXTURE_2D, texName);
+   glBegin(GL_QUADS);
+   glTexCoord2f(0.0, 0.0); glVertex3f(-2.0, -1.0, 0.0);
+   glTexCoord2f(0.0, 1.0); glVertex3f(-2.0, 1.0, 0.0);
+   glTexCoord2f(1.0, 1.0); glVertex3f(0.0, 1.0, 0.0);
+   glTexCoord2f(1.0, 0.0); glVertex3f(0.0, -1.0, 0.0);
+
+   glTexCoord2f(0.0, 0.0); glVertex3f(1.0, -1.0, 0.0);
+   glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 1.0, 0.0);
+   glTexCoord2f(1.0, 1.0); glVertex3f(2.41421, 1.0, -1.41421);
+   glTexCoord2f(1.0, 0.0); glVertex3f(2.41421, -1.0, -1.41421);
+   glEnd();  
+  
   // draw ground
-  glColor3d(112.0/255, 64.0/255, 0.0/255);
+  //glColor3d(112.0/255, 64.0/255, 0.0/255);
+  
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glEnable(GL_TEXTURE_2D);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+   glBindTexture(GL_TEXTURE_2D, texName);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
   glBegin(GL_QUADS);
-  glVertex3d(-eng.ground.width,0,-eng.ground.length);
-  glVertex3d(-eng.ground.width,0,eng.ground.length);
-  glVertex3d(eng.ground.width,0,eng.ground.length);  
-  glVertex3d(eng.ground.width,0,-eng.ground.length);
+  glTexCoord2d (0.0, 0.0); glVertex3d(-eng.ground.width,0,-eng.ground.length);
+  glTexCoord2d (1.0, 0.0); glVertex3d(-eng.ground.width,0,eng.ground.length);
+  glTexCoord2d (1.0, 1.0); glVertex3d(eng.ground.width,0,eng.ground.length);  
+  glTexCoord2d (0.0, 1.0); glVertex3d(eng.ground.width,0,-eng.ground.length);
   glEnd();
+  
+  glDisable(GL_TEXTURE_2D);
 
   // draw base
   glColor3d(0.0, 0.0, 0.0);
@@ -308,15 +386,6 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
   }
-  
-  
-  // Not implemented: actually draw the current game state.
-  // Here's some test code that draws red triangles at the
-  // corners of the game board.
-  glColor3d(0.0, 0.0, 0.0);
-  
-//  drawBorder();
-//  drawGame();
 
   // We pushed a matrix onto the PROJECTION stack earlier, we 
   // need to pop it.
