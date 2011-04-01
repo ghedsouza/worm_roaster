@@ -6,6 +6,7 @@
 #include <GL/glu.h>
 
 #include "game_engine.hpp"
+#include "perlin.h"
 
 static int tid = 1;
 
@@ -115,7 +116,6 @@ void Viewer::set_config()
   set_gl_capability(glconfig);
   
   init();
-  cout << "a";
 }
 
 Viewer::~Viewer()
@@ -341,23 +341,6 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   // it appear centered in the window.
   glTranslated(0.0, -12.0, 0.0);
   
-  
-     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glEnable(GL_TEXTURE_2D);
-   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-   glBindTexture(GL_TEXTURE_2D, texName);
-   glBegin(GL_QUADS);
-   glTexCoord2f(0.0, 0.0); glVertex3f(-2.0, -1.0, 0.0);
-   glTexCoord2f(0.0, 1.0); glVertex3f(-2.0, 1.0, 0.0);
-   glTexCoord2f(1.0, 1.0); glVertex3f(0.0, 1.0, 0.0);
-   glTexCoord2f(1.0, 0.0); glVertex3f(0.0, -1.0, 0.0);
-
-   glTexCoord2f(0.0, 0.0); glVertex3f(1.0, -1.0, 0.0);
-   glTexCoord2f(0.0, 1.0); glVertex3f(1.0, 1.0, 0.0);
-   glTexCoord2f(1.0, 1.0); glVertex3f(2.41421, 1.0, -1.41421);
-   glTexCoord2f(1.0, 0.0); glVertex3f(2.41421, -1.0, -1.41421);
-   glEnd();  
-  
   // draw ground
   //glColor3d(112.0/255, 64.0/255, 0.0/255);
   
@@ -365,7 +348,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
    glEnable(GL_TEXTURE_2D);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
    glBindTexture(GL_TEXTURE_2D, texName);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+//    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
   glBegin(GL_QUADS);
   glTexCoord2d (0.0, 0.0); glVertex3d(-eng.ground.width,0,-eng.ground.length);
