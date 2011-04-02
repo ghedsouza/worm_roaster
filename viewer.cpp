@@ -11,6 +11,8 @@
 
 static int tid = 1;
 
+static int win_size = 600;
+
 /*  Create checkerboard texture  */
 #define NOISE_SIZE 256
 #define checkImageWidth NOISE_SIZE
@@ -346,41 +348,60 @@ void drawRing()
     y_vals.at(s)[1] = y_outer;
   }
   
-  glColor3d(0.2, 0.2, 0.2);
   glBegin(GL_QUADS);
   for(int i=0; i<=segments; i++)
   {
     int next = (i+1)%(segments+1);
+   
+    glColor3d(0.5, 0.5, 0.5);
     glVertex3d(x_vals.at(i)[0], 0, y_vals.at(i)[0]);
     glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
     glVertex3d(x_vals.at(next)[1], 0, y_vals.at(next)[1]);    
     glVertex3d(x_vals.at(next)[0], 0, y_vals.at(next)[0]);
 
+    glColor3d(0.5, 0.5, 0.5);
     glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
     glVertex3d(x_vals.at(i)[1], height_scale, y_vals.at(i)[1]);
     glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);    
     glVertex3d(x_vals.at(next)[0], height_scale, y_vals.at(next)[0]);
     
+    glColor3d(0.3, 0.3, 0.3);    
     glVertex3d(x_vals.at(i)[0], 0, y_vals.at(i)[0]);
     glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
-    glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
-    glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);    
     glVertex3d(x_vals.at(next)[0], height_scale, y_vals.at(next)[0]);
+    glVertex3d(x_vals.at(next)[0], 0, y_vals.at(next)[0]);
+    
+    glColor3d(0.5, 0.5, 0.5);
+    glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
+    glVertex3d(x_vals.at(i)[1], height_scale, y_vals.at(i)[1]);
+    glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);
+    glVertex3d(x_vals.at(next)[1], 0, y_vals.at(next)[1]);
   }
   glEnd();  
 }
 
-void drawMG()
+void Viewer::drawMG()
 {
   GLUquadric *quad = gluNewQuadric();
-
-  glRotated(180, 0,1,0);
 
   double handle_rad = 1.0;
   double handle_length = handle_rad * 10;
   double rivet_scale = 7.0;
+  double rivet_rad_scale = 1.2;
   glColor3d(0.1, 0.1, 0.1);
-  glTranslated(0.0, 5.0, -5.0);
+  double g_x = max(0.0, double(min(win_size, mouse_x)))/double(win_size);
+  double g_y = (600.0 -double(max(0.0, (double)min(win_size, mouse_y))) )/double(win_size);
+  
+  g_x -= 0.5;
+  g_y -= 0.5;
+  
+  
+  g_x *= 4*eng.ground.width;
+  g_y *= 4*eng.ground.length;
+  
+  
+  glTranslated(g_x, 5.0, -(g_y-handle_length*3/2));
+  glRotated(180, 0,1,0);
   
   gluCylinder(quad, handle_rad, handle_rad, handle_length, 10, 10);
   gluDisk(quad, 0, handle_rad, 10, 10);
@@ -388,14 +409,14 @@ void drawMG()
   glPushMatrix();
   glTranslated(0, 0, handle_length - handle_length/rivet_scale);
   glColor3d(0.6, 0.6, 0.6);
-  gluDisk(quad, handle_rad, handle_rad*1.2, 10, 10);
-  gluCylinder(quad, handle_rad*1.2, handle_rad*1.2, handle_length/rivet_scale, 10, 10);
+  gluDisk(quad, handle_rad, handle_rad*rivet_rad_scale, 10, 10);
+  gluCylinder(quad, handle_rad*rivet_rad_scale, handle_rad*rivet_rad_scale, handle_length/rivet_scale, 10, 10);
   glTranslated(0, 0, handle_length/rivet_scale);
-  gluDisk(quad, 0, handle_rad*1.2, 10, 10);
+  gluDisk(quad, 0, handle_rad*rivet_rad_scale, 10, 10);
   glPopMatrix();
   
-  glTranslated(0, 0, handle_length*3/2);
-  glScaled(handle_length/2, 1, handle_length/2);
+  glTranslated(0, -2*rivet_rad_scale*1.2/2, handle_length*(1.45));
+  glScaled(handle_length/2, 2*rivet_rad_scale*1.2, handle_length/2);
   drawRing();  
 }
 
@@ -612,9 +633,10 @@ bool Viewer::on_motion_notify_event(GdkEventMotion* event)
         last_motion_button[1] = (event->state & GDK_BUTTON2_MASK);
         last_motion_button[2] = (event->state & GDK_BUTTON3_MASK);
       }
-      mouse_x = event->x;
-      mouse_y = event->y;
+//      cout << mouse_x << ", " << mouse_y << endl;
   }
+  mouse_x = event->x;
+  mouse_y = event->y;
   invalidate();
   return true;
 }

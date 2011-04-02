@@ -59,10 +59,13 @@ private:
   bool rot_tick();
   void drawGame();
   void reset_multi_colours();
+  void drawMG();
+  
   int mouse_x, mouse_y, x_rot_angle, y_rot_angle, z_rot_angle;
   unsigned int last_motion_time;
   int last_motion_diff, last_motion_button[3];
   int shift, scale;
+  
   Game game;
   
   sigc::connection rot_tick_conn;
