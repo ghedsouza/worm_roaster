@@ -1,6 +1,7 @@
 #include "viewer.hpp"
 #include <iostream>
 #include <algorithm>
+#include <vector>
 #include <cstdlib>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -313,6 +314,62 @@ void Viewer::double_buf(int double_buffer)
 {
 }
 
+double deg_to_rad(double d)
+{
+  return M_PI*d/180;
+}
+
+void drawRing()
+{
+  int segments = 10;
+  double height_scale = 1;
+  
+  vector< vector<double> > x_vals;
+  vector< vector<double> > y_vals;
+  
+  x_vals.resize(segments+1);
+  y_vals.resize(segments+1);
+  
+  for(int s = 0; s <= segments ; s++)
+  {
+    x_vals.at(s).resize(2);
+    y_vals.at(s).resize(2);
+    
+    double d = (double(s)/double(segments)) * 360.0;
+    double r_outer = 1, r_inner = 0.9;
+    double x_outer = r_outer*cos(deg_to_rad(d)), y_outer = r_outer*sin(deg_to_rad(d));
+    double x_inner = r_inner*cos(deg_to_rad(d)), y_inner = r_inner*sin(deg_to_rad(d));
+    x_vals.at(s)[0] = x_inner;
+    y_vals.at(s)[0] = y_inner;
+    
+    x_vals.at(s)[1] = x_outer;
+    y_vals.at(s)[1] = y_outer;
+  }
+  
+  glColor3d(0.2, 0.2, 0.2);
+  glBegin(GL_QUADS);
+  for(int i=0; i<=segments; i++)
+  {
+    int next = (i+1)%(segments+1);
+    glVertex3d(x_vals.at(i)[0], 0, y_vals.at(i)[0]);
+    glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
+    glVertex3d(x_vals.at(next)[1], 0, y_vals.at(next)[1]);    
+    glVertex3d(x_vals.at(next)[0], 0, y_vals.at(next)[0]);
+
+    glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
+    glVertex3d(x_vals.at(i)[1], height_scale, y_vals.at(i)[1]);
+    glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);    
+    glVertex3d(x_vals.at(next)[0], height_scale, y_vals.at(next)[0]);
+    
+    glVertex3d(x_vals.at(i)[0], 0, y_vals.at(i)[0]);
+    glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
+    glVertex3d(x_vals.at(i)[0], height_scale, y_vals.at(i)[0]);
+    glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);    
+    glVertex3d(x_vals.at(next)[0], height_scale, y_vals.at(next)[0]);
+  }
+  glEnd();  
+}
+
 void drawMG()
 {
   GLUquadric *quad = gluNewQuadric();
@@ -337,6 +394,9 @@ void drawMG()
   gluDisk(quad, 0, handle_rad*1.2, 10, 10);
   glPopMatrix();
   
+  glTranslated(0, 0, handle_length*3/2);
+  glScaled(handle_length/2, 1, handle_length/2);
+  drawRing();  
 }
 
 bool Viewer::on_expose_event(GdkEventExpose* event)
