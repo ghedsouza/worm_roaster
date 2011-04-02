@@ -11,8 +11,9 @@
 static int tid = 1;
 
 /*  Create checkerboard texture  */
-#define checkImageWidth 64
-#define checkImageHeight 64
+#define NOISE_SIZE 256
+#define checkImageWidth NOISE_SIZE
+#define checkImageHeight NOISE_SIZE
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 
 static GLuint texName;
@@ -24,9 +25,20 @@ void makeCheckImage(void)
    for (i = 0; i < checkImageHeight; i++) {
       for (j = 0; j < checkImageWidth; j++) {
          c = ((((i&0x8)==0)^((j&0x8))==0))*255;
-         checkImage[i][j][0] = (GLubyte) c;
-         checkImage[i][j][1] = (GLubyte) c;
-         checkImage[i][j][2] = (GLubyte) c;
+//         c = (int)(255.0 * PerlinNoise_2D(i,j));
+//         double p = 0.1*PerlinNoise_2D(i, j, 0.25, 4) + 0.9*PerlinNoise_2D(i, j, 0.95, 1);
+         double p = PerlinNoise_2D(i, j, 0.65, 7);
+//         p = cos(p);
+         p = fabs(p);
+//         p = p*10;
+//         cout << "p: " << p << endl;
+//         if (p<0.1) p = 0;
+//         else p = 1;
+         c = int(255*p);
+         //glColor3d(112.0/255, 64.0/255, 0.0/255);
+         checkImage[i][j][0] = (GLubyte) 100 + int(p*200);
+         checkImage[i][j][1] = (GLubyte) 55 + int(p*100);
+         checkImage[i][j][2] = (GLubyte) 0;
          checkImage[i][j][3] = (GLubyte) 255;
       }
    }
