@@ -164,6 +164,10 @@ void Viewer::on_realize()
   
   // Just enable depth testing and set the background colour.
   glEnable(GL_DEPTH_TEST);
+  
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
   glClearColor(0.7, 0.7, 1.0, 0.0);
   
   gldrawable->gl_end();
@@ -377,7 +381,29 @@ void drawRing()
     glVertex3d(x_vals.at(next)[1], height_scale, y_vals.at(next)[1]);
     glVertex3d(x_vals.at(next)[1], 0, y_vals.at(next)[1]);
   }
-  glEnd();  
+  glEnd();
+  
+  GLfloat mat_solid[] = { 0.75, 0.75, 0.0, 1.0 };
+  GLfloat mat_zero[] = { 0.0, 0.0, 0.0, 1.0 };
+  GLfloat mat_transparent[] = { 0.0, 0.0, 0.9, 0.0 };
+  GLfloat mat_emission[] = { 0.0, 0.3, 0.3, 0.6 };
+  
+//  glMaterialfv(GL_FRONT, GL_EMISSION, mat_emission);
+//  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_transparent);
+  glEnable (GL_BLEND);
+  glDepthMask (GL_FALSE);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+  
+  glColor3d(0.3, 0.3, 0.4);
+  glBegin(GL_POLYGON);
+  for(int i=0; i<=segments; i++)
+  { 
+    glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
+  }
+  glEnd();
+  
+  glDepthMask (GL_TRUE);
+  glDisable (GL_BLEND);
 }
 
 void Viewer::drawMG()

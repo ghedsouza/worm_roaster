@@ -13,7 +13,7 @@ game_started(0),
 base_speed(TICK_SPEED),
 update_speed(0)
 {
-  set_title("488 Tetrominoes on the Wall");
+  set_title("A5");
 
   // A utility class for constructing things that go into menus, which
   // we'll set up next.
