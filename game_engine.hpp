@@ -47,7 +47,7 @@ struct game_engine {
         worms[i].pos.x = -ground.width + (rand() % (2*(int)ground.width));
         worms[i].pos.z = -ground.length + (rand() % (2*(int)ground.length));
         worms[i].pos.y = 0;
-        cout << "new worm: " << worms[i].pos << endl;
+//        cout << "new worm: " << worms[i].pos << endl;
       } else {
         Vector3D dir = (base.pos-worms[i].pos);
         dir.normalize();

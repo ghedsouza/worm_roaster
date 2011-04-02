@@ -7,6 +7,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+
+
 double Cubic_Interpolate(double v0, double v1, double v2, double v3, double x)
 {
 	double P = (v3 - v2) - (v0 - v1);
@@ -65,7 +67,7 @@ double PerlinNoise_2D(double x, double y, double per, double Oct)
   double p = per;
   double n = Oct - 1;
 
-  for(int i=1; i<=n; i++)
+  for(int i=0; i<=n; i++)
   {
     double frequency = pow(2,i);
     double amplitude = pow(p,i);

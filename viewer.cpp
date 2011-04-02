@@ -27,7 +27,7 @@ void makeCheckImage(void)
          c = ((((i&0x8)==0)^((j&0x8))==0))*255;
 //         c = (int)(255.0 * PerlinNoise_2D(i,j));
 //         double p = 0.1*PerlinNoise_2D(i, j, 0.25, 4) + 0.9*PerlinNoise_2D(i, j, 0.95, 1);
-         double p = PerlinNoise_2D(i, j, 0.65, 7);
+         double p = PerlinNoise_2D(i, j, 0.01, 1);
 //         p = cos(p);
          p = fabs(p);
 //         p = p*10;
@@ -313,6 +313,32 @@ void Viewer::double_buf(int double_buffer)
 {
 }
 
+void drawMG()
+{
+  GLUquadric *quad = gluNewQuadric();
+
+  glRotated(180, 0,1,0);
+
+  double handle_rad = 1.0;
+  double handle_length = handle_rad * 10;
+  double rivet_scale = 7.0;
+  glColor3d(0.1, 0.1, 0.1);
+  glTranslated(0.0, 5.0, -5.0);
+  
+  gluCylinder(quad, handle_rad, handle_rad, handle_length, 10, 10);
+  gluDisk(quad, 0, handle_rad, 10, 10);
+  
+  glPushMatrix();
+  glTranslated(0, 0, handle_length - handle_length/rivet_scale);
+  glColor3d(0.6, 0.6, 0.6);
+  gluDisk(quad, handle_rad, handle_rad*1.2, 10, 10);
+  gluCylinder(quad, handle_rad*1.2, handle_rad*1.2, handle_length/rivet_scale, 10, 10);
+  glTranslated(0, 0, handle_length/rivet_scale);
+  gluDisk(quad, 0, handle_rad*1.2, 10, 10);
+  glPopMatrix();
+  
+}
+
 bool Viewer::on_expose_event(GdkEventExpose* event)
 {    
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
@@ -347,10 +373,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
            (double)scale/(double)SCALE,
            (double)scale/(double)SCALE);
 
-  // You'll be drawing unit cubes, so the game will have width
-  // 10 and height 24 (game = 20, stripe = 4).  Let's translate
-  // the game so that we can draw it starting at (0,0) but have
-  // it appear centered in the window.
+  // look at the ground from above-back
   glTranslated(0.0, -12.0, 0.0);
   
   // draw ground
@@ -381,7 +404,9 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
   }
-
+  
+  drawMG();
+  
   // We pushed a matrix onto the PROJECTION stack earlier, we 
   // need to pop it.
 
