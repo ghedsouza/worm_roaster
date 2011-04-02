@@ -6,6 +6,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "a2.hpp"
+#include "algebra.hpp"
 #include "game_engine.hpp"
 #include "perlin.h"
 
@@ -325,6 +327,93 @@ double deg_to_rad(double d)
   return M_PI*d/180;
 }
 
+double rad_to_deg(double r)
+{
+  return 180.0/M_PI*r;
+}
+
+void drawWorm()
+{
+#if 1
+  int T = 10;
+  for(int t=0; t<T; t++)
+  {
+    double tt = double(t)/double(T)*3;
+    
+  }
+
+#else
+
+
+
+  double length = 2;
+  int prec = 30;
+  
+  vector< vector<Point3D> > rings;
+  rings.resize(prec);
+  
+  for(int p=0; p<prec; p++)
+  {
+    double x1 = double(p)/double(prec)*length;
+    double z1 = sin(x1);
+    
+    double x2 = double(p+1)/double(prec)*length;
+    double z2 = sin(x2);
+    
+    double angle = rad_to_deg( atan2(z2-z1, x2-x1) );
+    if (angle < 0) angle = (90+angle);
+//    cout << "angle: " << angle << endl;
+    
+    Matrix4x4 rot = rotation(angle, 'y');
+    
+    int circle_segments = 3;
+    rings.at(p).resize(circle_segments);
+    
+    for(int c=0; c<circle_segments; c++)
+    {
+      double d = double(c)/double(circle_segments)*360;
+//      cout << "d: " << d << endl;
+      double cx = cos(deg_to_rad(d));
+      double cy = sin(deg_to_rad(d));
+//      cout << "cx : " << cx << ", cy: " << cy << endl;
+      Point3D cp(cx, cy, 0);      
+      cp = rot*cp;
+      cp = cp + (Point3D(x1, 0, z1)-Point3D(0,0,0));
+      rings.at(p).at(c) = cp;
+    }
+  }
+//  exit(-1);
+  
+
+  glPushMatrix();
+  glTranslated(2,0,0);
+  glScaled(3,3,3);
+  
+  for(int i=0; i<rings.size()-1; i++)
+  {
+    double acc = 0.2;
+    vector<Point3D> points = rings.at(i);
+    for(int j=0; j<points.size(); j++)
+    { 
+      glColor3d(0.5, 0.2+acc, 0.2+acc);
+      acc += 0.2;
+      Point3D pt1a = points.at(j);
+      Point3D pt1b = points.at((j+1)%points.size());
+      Point3D pt2a = rings.at(i+1).at(j);
+      Point3D pt2b = rings.at(i+1).at((j+1)%points.size());
+      glBegin(GL_POLYGON);      
+      glVertex3d(pt1a.x, pt1a.y, pt1a.z);
+      glVertex3d(pt2a.x, pt2a.y, pt2a.z);
+      glVertex3d(pt2b.x, pt2b.y, pt2b.z);
+      glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
+      glEnd();
+      break;
+    }
+  }
+  glPopMatrix();
+#endif
+}
+
 void drawRing()
 {
   int segments = 10;
@@ -421,10 +510,8 @@ void Viewer::drawMG()
   g_x -= 0.5;
   g_y -= 0.5;
   
-  
   g_x *= 4*eng.ground.width;
   g_y *= 4*eng.ground.length;
-  
   
   glTranslated(g_x, 5.0, -(g_y-handle_length*3/2));
   glRotated(180, 0,1,0);
@@ -511,6 +598,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
   }
+  
+  drawWorm();
   
   drawMG();
   

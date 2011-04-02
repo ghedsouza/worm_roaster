@@ -489,3 +489,4 @@ inline std::ostream& operator <<(std::ostream& os, const Colour& c)
 }
 
 #endif // CS488_ALGEBRA_HPP
+
