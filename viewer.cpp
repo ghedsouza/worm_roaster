@@ -362,15 +362,31 @@ void vertp(Point3D p)
 
 void drawWorm()
 {
+  static int temp_t = 0;
   static double tilt = 10.0;
   static int dir = 1;
   glColor3d(0,1,0);
   GLUquadric *quad = gluNewQuadric();
   glPushMatrix();
   glTranslated(4, 0, 0);
-  glScaled(2,2,2);
+  glScaled(1,1,1);
   //gluDisk(quad, 0,10,10,10);
   Matrix4x4 trans;
+
+  double ang = 90*0.5*(1+sin(deg_to_rad(2*temp_t)));
+  double dist = 45-fabs(ang-45);
+  double ls = dist/45;
+  double sf = .2;
+  
+//  trans = trans * translation(Vector3D(-10*sin(deg_to_rad(temp_t)), 0, 0));
+//  trans = trans * translation(Vector3D(0, 0, 2 * (90-ang)/90 ));
+  double xxx = -2*sin(deg_to_rad(temp_t));
+  trans = trans * translation(Vector3D(xxx, 0, 2*sin(xxx) ));
+
+  trans = trans * translation(Vector3D(0, 0, 0)) * rotation(45 + ang, 'y') * translation(Vector3D(0, 0, 0));
+//  trans = rotation(45, 'y');
+  temp_t += 1;
+  
   int circle_segments = 10;
   vector<Point3D> ring1, ring2; 
   ring1.resize(circle_segments);
@@ -383,7 +399,7 @@ void drawWorm()
     double deg = double(t)/circle_segments * 360;
     double cx = cos(deg_to_rad(deg));
     double cy = sin(deg_to_rad(deg));
-    A->at(t) = Point3D(cx, cy, 0);
+    A->at(t) = trans * Point3D(cx, cy, 0);
 //    cout << "p: " << A->at(t) << endl;
   }
 //  exit(0);
@@ -396,10 +412,23 @@ void drawWorm()
   }
   glEnd();
   int dir2 = 1;
-  for(int r=0; r<=5; r++)
+  for(int r=0; r<13; r++)
   {
+    double ang2 = ang-45;
+    if (ang2 < 0) {
+      tilt = 45*(fabs(ang2)/45);
+      dir2 = -1;
+    }
+    else {
+      tilt = 45*(fabs(ang2)/45);
+      dir2 = 1;
+    }
+      
+    if (r == 2 || r == 5) dir2 *= 1;
+    else if (r == 8 || r == 11) dir2 *= -1;
+    
     bool istilt = false;
-    if ((r%2) == 0) {
+    if ((r%3) == 2 && 1) {
       glColor3d(1,0,0);  
       double sign = (dir2 < 0) ? -1 : 1;
       istilt = true;
@@ -412,7 +441,7 @@ void drawWorm()
       
     } else {
       glColor3d(0,0,1);  
-      trans = trans * translation(Vector3D(0, 0, 1));
+      trans = trans * translation(Vector3D(0, 0, 1 + sf*ls));
     }
     
     for(int t=0; t<circle_segments; t++)
