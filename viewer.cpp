@@ -593,10 +593,26 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   drawCube(eng.base.pos.x,eng.base.pos.y, eng.base.pos.z);
   
   // draw worms
-  glColor3d(1.0, 0.0, 0.0);  
   for(int i=0; i<eng.num_worms; i++) {
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
+    glColor3d(0.2, 0.2, 0.2);
     drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
+    glPushMatrix();
+    glTranslated(eng.worms[i].pos.x, eng.worms[i].pos.y+1, eng.worms[i].pos.z);
+//    glScaled(0.1, 0.1, 0.1);
+    glColor3d(1.0, 0.0, 0.0);
+    for (int p=0; p<eng.ps.size; p++)
+    {
+      double size = 0.1;
+      Point3D pos = eng.ps.p[p].pos;
+      glBegin(GL_QUADS);
+      glVertex3d(pos.x, pos.y, pos.z);
+      glVertex3d(pos.x, pos.y+size, pos.z);
+      glVertex3d(pos.x+size, pos.y+size, pos.z);
+      glVertex3d(pos.x+size, pos.y, pos.z);
+      glEnd();
+    }
+    glPopMatrix();
   }
   
   drawWorm();
