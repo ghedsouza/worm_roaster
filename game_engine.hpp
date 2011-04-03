@@ -24,7 +24,7 @@ struct particle_t
   Point3D pos;
   Vector3D vel;
   Vector3D acc;
-  double t;
+  double T, t;
   
   void update()
   {
@@ -37,12 +37,12 @@ struct particle_t
   {
     return (t < 0);
   }
+  
+  double frac()
+  {
+    return t/T;
+  }
 };
-
-static double unif()
-{
-  return rand()/double(RAND_MAX);
-}
 
 struct particle_system
 {   
@@ -53,10 +53,11 @@ struct particle_system
   void renew(int i)
   {
     double scale = 1+unif();
+    scale *= 2;
     p[i].pos = Point3D(unif(), 0, unif());
     p[i].vel = Vector3D(-0.01+(unif()*0.02), scale*2*unif()*0.01, -0.01+(unif()*0.02));
     p[i].acc = Vector3D(0,0,0);
-    p[i].t = (50 + unif()*50)/scale;
+    p[i].T = p[i].t = (50 + unif()*50)/scale;
   }
   
   particle_system(int s)
@@ -125,14 +126,12 @@ struct game_engine {
     }
   }
   
-  game_engine() : ps(1000) {
+  game_engine() : ps(2000) {
     ground.x = ground.y = ground.z = 0;
     ground.length = 10;
     ground.width = 20;
     base.pos.x = base.pos.y = base.pos.x = 0;
-    num_worms = 1;
-    
-    
+    num_worms = 4;    
   }
 };
 

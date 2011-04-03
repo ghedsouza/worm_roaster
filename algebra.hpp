@@ -23,6 +23,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+static double unif()
+{
+  return rand()/double(RAND_MAX);
+}
+
+
 class Point2D
 {
 public:

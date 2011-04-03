@@ -334,6 +334,67 @@ double rad_to_deg(double r)
 
 void drawWorm()
 {
+  glColor3d(0,1,0);
+  GLUquadric *quad = gluNewQuadric();
+  glPushMatrix();
+  glTranslated(2, 0, 0);
+  glScaled(2,2,2);
+  //gluDisk(quad, 0,10,10,10);
+  Matrix4x4 trans;
+  int circle_segments = 3;
+  vector<Point3D> ring1;
+  ring1.resize(circle_segments);
+  for(int t=0; t<circle_segments; t++)
+  {
+    double deg = double(t)/360;
+    double cx = cos(deg_to_rad(deg));
+    double cy = sin(deg_to_rad(deg));
+    ring1.at(t) = Point3D(cx, cy, 0);
+  }
+  trans = trans * translation(Vector3D(-0.5, 0, 0)) * rotation(30, 'y') * translation(Vector3D(0.5, 0, 0));
+  vector<Point3D> ring2;
+  ring2.resize(circle_segments);
+  for(int t=0; t<circle_segments; t++)
+  {
+    double deg = double(t)/360;
+    double cx = cos(deg_to_rad(deg));
+    double cy = sin(deg_to_rad(deg));
+    cout << "before: " << Point3D(cx, cy, 0) << endl;
+    ring2.at(t) = trans * Point3D(cx, cy, 0);
+    cout << "after: " << ring2.at(t) << endl;
+  }
+  exit(-1);
+#if 0
+    glBegin(GL_POLYGON);      
+    glVertex3d(0, 0, 0);
+    glVertex3d(0, 1, 0);
+    glVertex3d(1, 1, 0);
+    glVertex3d(1, 0, 0);
+    glEnd();
+    #endif
+  
+  for(int i=0; i<circle_segments; i++)
+  {
+    Point3D pt1a = ring1.at(i);
+    Point3D pt1b = ring1.at((i+1)%ring1.size());
+    Point3D pt2a = ring2.at(i);
+    Point3D pt2b = ring2.at((i+1)%ring2.size());
+    
+//    cout << "1a: " << pt1a << ", 1b: " << pt1b << ", pt2a: " << pt2a << ", pt2b: " << pt2b << endl;
+      
+    glBegin(GL_POLYGON);
+    glVertex3d(pt1a.x, pt1a.y, pt1a.z);
+    glVertex3d(pt2a.x, pt2a.y, pt2a.z);
+    glVertex3d(pt2b.x, pt2b.y, pt2b.z);
+    glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
+    glEnd();
+  }
+//  exit(-1);
+  glPopMatrix();
+}
+
+void drawWorm_old()
+{
 #if 1
   int T = 10;
   for(int t=0; t<T; t++)
@@ -601,17 +662,33 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
     glTranslated(eng.worms[i].pos.x, eng.worms[i].pos.y+1, eng.worms[i].pos.z);
 //    glScaled(0.1, 0.1, 0.1);
     glColor3d(1.0, 0.0, 0.0);
+    
     for (int p=0; p<eng.ps.size; p++)
     {
       double size = 0.1;
       Point3D pos = eng.ps.p[p].pos;
+      glColor3d(1.0,
+                0.5*pow(( 0.5*pow(2, -10*fabs(pos.x-0.5)) + 
+                          pow(1*eng.ps.p[p].frac(),2) +
+                          unif()*0.0 ), 5),
+                0.0);  
+//      cout << "x: " << pos.x << endl;
+      glEnable (GL_BLEND);
+      glDepthMask (GL_FALSE);
+      glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+      
       glBegin(GL_QUADS);
       glVertex3d(pos.x, pos.y, pos.z);
       glVertex3d(pos.x, pos.y+size, pos.z);
       glVertex3d(pos.x+size, pos.y+size, pos.z);
-      glVertex3d(pos.x+size, pos.y, pos.z);
+      glVertex3d(pos.x+size, pos.y, pos.z);      
       glEnd();
+      
+      glDepthMask (GL_TRUE);
+      glDisable (GL_BLEND);
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
+//    exit(-1);
     glPopMatrix();
   }
   
