@@ -16,15 +16,15 @@ clean:
 
 $(MAIN): $(OBJECTS)
 	@echo Creating $@...
-	@$(CXX) -o $@ $(OBJECTS) $(LDFLAGS)
+	@$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) -lSDL -lSDL_image
 
 %.o: %.cpp
 	@echo Compiling $<...
-	@$(CXX) -o $@ -c $(CXXFLAGS) $<
+	@$(CXX) -I. -I/usr/include/SDL -o $@ -c $(CXXFLAGS) $<
 
 %.d: %.cpp
 	@echo Building $@...
-	@set -e; $(CC) -M $(CPPFLAGS) $< \
+	@set -e; $(CC) -I. -I/usr/include/SDL  -M $(CPPFLAGS) $< \
                   | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
                 [ -s $@ ] || rm -f $@
 

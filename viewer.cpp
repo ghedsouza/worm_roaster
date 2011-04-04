@@ -5,10 +5,14 @@
 #include <cstdlib>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include "SDL.h"
+#include "SDL_opengl.h"
+#include "SDL_image.h"
 
 #include "a2.hpp"
 #include "algebra.hpp"
 #include "game_engine.hpp"
+#include "image.hpp"
 #include "perlin.h"
 
 static int tid = 1;
@@ -21,6 +25,10 @@ static int win_size = 600;
 #define checkImageHeight NOISE_SIZE
 
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
+
+#define barkwidth 395
+#define barkheight 197
+static GLubyte barkImage[barkheight][barkwidth][4];
 
 static GLuint texName[3];
 
@@ -51,7 +59,7 @@ void makeCheckImage(void)
 }
 
 void init(void)
-{    
+{
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel(GL_FLAT);
    glEnable(GL_DEPTH_TEST);
@@ -90,6 +98,110 @@ void init(void)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+ 
+ #if 0
+  Image bark_img(395, 197, 24);
+  bark_img.loadPng("bark.png");
+  double *imgdata = bark_img.data();
+  cout << "cccc: " << imgdata[0] << ", "
+  << imgdata[1] << ", "
+  << imgdata[2] << ", "
+  << imgdata[3] << ", " << endl;
+  
+  {
+    int i, j, c1, c2, c3, c4;
+
+    for (i = 0; i < barkheight; i++) {
+    for (j = 0; j < barkwidth; j++) {
+       c4 = int( imgdata[i*barkwidth + j*4 + 0]*255.0 );
+       c1 = int( imgdata[i*barkwidth + j*4 + 1]*255.0 );
+       c2 = int( imgdata[i*barkwidth + j*4 + 2]*255.0 );
+       c3 = int( imgdata[i*barkwidth + j*4 + 3]*255.0 );;
+       
+//      cout << "c: " << c1 << ", " << c2 << ", " << c3 << endl;
+//       exit(0);
+       
+       //glColor3d(112.0/255, 64.0/255, 0.0/255);
+       barkImage[i][j][0] = (GLubyte) c1;
+       barkImage[i][j][1] = (GLubyte) c2;
+       barkImage[i][j][2] = (GLubyte) c3;
+       barkImage[i][j][3] = (GLubyte) c4;
+    }
+    }
+   }
+   
+   glBindTexture(GL_TEXTURE_2D, texName[2]);
+
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+                   GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+                   GL_NEAREST);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 
+                64, 0, GL_RGBA, GL_UNSIGNED_BYTE, 
+                barkImage);
+#endif    
+
+        GLuint texture;			// This is a handle to our texture object
+        SDL_Surface *surface;	// This surface will tell us the details of the image
+        GLenum texture_format;
+        GLint  nOfColors;
+
+        if ( (surface = IMG_Load("bark.png")) ) { 
+
+        // Check that the image's width is a power of 2
+        if ( (surface->w & (surface->w - 1)) != 0 ) {
+          printf("warning: image.bmp's width is not a power of 2\n");
+        }
+
+        // Also check if the height is a power of 2
+        if ( (surface->h & (surface->h - 1)) != 0 ) {
+          printf("warning: image.bmp's height is not a power of 2\n");
+        }
+
+              // get the number of channels in the SDL surface
+              nOfColors = surface->format->BytesPerPixel;
+              if (nOfColors == 4)     // contains an alpha channel
+              {
+                      if (surface->format->Rmask == 0x000000ff)
+                              texture_format = GL_RGBA;
+                      else
+                              texture_format = GL_BGRA;
+              } else if (nOfColors == 3)     // no alpha channel
+              {
+                      if (surface->format->Rmask == 0x000000ff)
+                              texture_format = GL_RGB;
+                      else
+                              texture_format = GL_BGR;
+              } else {
+                      printf("warning: the image is not truecolor..  this will probably break\n");
+                      // this error should not go unhandled
+              }
+
+        // Bind the texture object
+        glBindTexture( GL_TEXTURE_2D, texName[2] );
+
+        // Set the texture's stretching properties
+              glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+              glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+        // Edit the texture object's image data using the information SDL_Surface gives us
+        glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0,
+                            texture_format, GL_UNSIGNED_BYTE, surface->pixels );
+        } 
+        else {
+        printf("SDL could not load image.bmp: %s\n", SDL_GetError());
+        SDL_Quit();
+        exit(0);
+        }    
+
+        // Free the SDL_Surface only if it was successfully created
+        if ( surface ) { 
+        SDL_FreeSurface( surface );
+        }
+   
+                
                 
 }
 
@@ -883,7 +995,7 @@ for (int render=0; render<2; render++) {
    glEnable(GL_TEXTURE_2D);
 //   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-   glBindTexture(GL_TEXTURE_2D, texName[0]);
+   glBindTexture(GL_TEXTURE_2D, texName[2]);
   
   glNormal3d(0, 1, 0);
   
