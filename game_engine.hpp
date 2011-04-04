@@ -184,7 +184,7 @@ struct game_engine {
     ground.width = 20;
     base.pos.x = base.pos.y = base.pos.x = 0;
     base.hit = 0;
-    num_worms = 4;    
+    num_worms = 1;    
   }
 };
 

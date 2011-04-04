@@ -397,7 +397,7 @@ void vertp(Point3D p)
 
 void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_engine *eng, int index)
 { 
-  if (eng->worms[index].burnt) {
+  if (eng->worms[index].burning) {
     temp_t = eng->worms[index].temp_t;
   }
   
@@ -555,11 +555,12 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
 //          if (r != 0) break;
           double size = 0.1;
           Point3D pos = eng->ps.p[p].pos;
-          glColor3d(1.0 * 0.5*(pow(1*eng->ps.p[p].frac(), 1) + unif()*0.0 + pow(2, -10*fabs(pos.x-0.5)) ),
-                    0.5*pow(( 0.5*0.5*( pow(2.0, -10*fabs(pos.x-0.5)) + pow(2.0, -10*fabs(pos.y-0.5)) )+ 
-                              pow(1*eng->ps.p[p].frac(),2) +
-                              unif()*0.0 ), 5),
-                    0.1);
+//          cout << eng->worms[index].frac() << endl;
+          glColor3d(eng->worms[index].frac()* 1.0 * 0.5*(pow(1*eng->ps.p[p].frac(), 1) + unif()*0.0 + pow(2, -10*fabs(pos.x-0.5)) ),
+                    eng->worms[index].frac() * 0.5*pow(( 0.5*0.5*( pow(2.0, -10*fabs(pos.x-0.5)) + pow(2.0, -10*fabs(pos.y-0.5)) )+ 
+                              eng->worms[index].frac()*pow(1*eng->ps.p[p].frac(),2) +
+                              eng->worms[index].frac()*unif()*0.0 ), 5),
+                    0.0);
 //          pos = pt1a + pos.x*leg1 + pos.z*leg2 + pos.y*normal;
           pos = pt1a + pos.z*leg2 + pos.x*leg1 + pos.y*normal;
           glPushMatrix();
@@ -848,7 +849,7 @@ for (int render=0; render<2; render++) {
     drawMG(-1);
     glPushMatrix();
     glScaled(1.2, 1.2, 1.2);
-    cout << "pass1: Scaled" << endl;
+//    cout << "pass1: Scaled" << endl;
   } else {
   }
   
@@ -1058,7 +1059,6 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
   glLoadIdentity();
   glViewport(0, 0, event->width, event->height);
   gluPerspective(40.0, (GLfloat)event->width/(GLfloat)event->height, 0.1, 1000.0);
-eng->worms[index].
   // Reset to modelview matrix mode
   
   glMatrixMode(GL_MODELVIEW);
