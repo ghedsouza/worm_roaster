@@ -384,6 +384,8 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
   glColor3d(0,1,0);
   GLUquadric *quad = gluNewQuadric();
   glPushMatrix();
+  if (eng->worms[index].burning)
+    glScaled(1, 1*eng->worms[index].frac(), 1);
   glTranslated(pos.x, pos.y, pos.z);
   glRotated(tobase_angle, 0, 1, 0);
   glScaled(1,1,1);
@@ -434,6 +436,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
   int dir2 = 1;
   for(int r=0; r<13; r++)
   {
+    eng->ps.update();
     bool red = false;
     double ang2 = ang-45;
     if (ang2 < 0) {
@@ -528,7 +531,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
                     0.5*pow(( 0.5*0.5*( pow(2.0, -10*fabs(pos.x-0.5)) + pow(2.0, -10*fabs(pos.y-0.5)) )+ 
                               pow(1*eng->ps.p[p].frac(),2) +
                               unif()*0.0 ), 5),
-                    0.0);
+                    0.1);
 //          pos = pt1a + pos.x*leg1 + pos.z*leg2 + pos.y*normal;
           pos = pt1a + pos.z*leg2 + pos.x*leg1 + pos.y*normal;
           glPushMatrix();
@@ -540,39 +543,14 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
     //      cout << "x: " << pos.x << endl;
           glEnable (GL_BLEND);
 //          glDepthMask (GL_FALSE);
-//          glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+          glBlendFunc (GL_SRC_ALPHA, GL_ONE);
           
           
-          glDepthMask (GL_TRUE);
-//          glDisable (GL_BLEND);
-          glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+//          glDepthMask (GL_TRUE);
+
+//          glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
           
           glPushMatrix();
-          
-          #if 0
-          glBegin(GL_QUADS);
-          glVertex3d(pos.x, pos.y, pos.z);
-          glVertex3d(pos.x, pos.y+size, pos.z);
-          glVertex3d(pos.x+size, pos.y+size, pos.z);
-          glVertex3d(pos.x+size, pos.y, pos.z);      
-          glEnd();
-          #endif
-          
-          glTranslated(pos.x, pos.y, pos.z);
-          //gluSphere(quad, 0.1, 10, 10);
-          #if 0
-          glBegin(GL_QUADS);
-          glVertex3d(0.0, 0, 0);
-          glVertex3d(0.0, 0.0+size,0);
-          glVertex3d(0.0+size, 0.0+size, 0);
-          glVertex3d(0.0+size, 0, 0);      
-          glEnd();
-          #endif
-
-          
-        //  glRotated(-y_rot_angle, 0, 1, 0);
-        //  glRotated(-x_rot_angle, 1, 0, 0);
-          glTranslated(-pos.x, -pos.y, -pos.z);
           
           glBegin(GL_QUADS);
           glVertex3d(pos.x, pos.y, pos.z);
@@ -743,12 +721,11 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   if (!gldrawable->gl_begin(get_gl_context()))
     return false;
   
-  // Clear the screen    
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   // Modify the current projection matrix so that we move the 
   // camera away from the origin.  We'll draw the game at the
   // origin, and we need to back up to see it.
+
+  GLUquadric *quad = gluNewQuadric();
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -757,6 +734,7 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+  
   // Not implemented: set up lighting (if necessary)
 
   // Not implemented: scale and rotate the scene
@@ -770,16 +748,57 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   // look at the ground from above-back
   glTranslated(0.0, -12.0, 0.0);
   
+for (int sten=0; sten<2; sten++) {
   
      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
+  
+  if (sten == 0)
+  {
+    continue;
+    // Clear the screen
+    //glClearStencil(0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 1);
+    glColorMask(0,0,0,0);
+    
+    glEnable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+    
+    
+    glPushMatrix();
+    glScaled(3,3,3);
+    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
+    gluCylinder(quad, 1, 1, 1, 10, 10);
+    glPopMatrix();
+    
+    glStencilFunc(GL_ALWAYS, 0, 0);
+    
+        glPushMatrix();
+    glScaled(3,3,3);
+    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
+    gluCylinder(quad, 1, 1, 1, 10, 10);
+    glPopMatrix();
+    
+    glDisable(GL_STENCIL_TEST);
+    
+    continue;
+  }
+  else
+  {
+    
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  }
+  
+  
   
     glPushMatrix();
     glColor3d(1,1,1);
     glScaled(1,1,1);
 //    glTranslated(g_x, 10, -g_y);
     glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
-    GLUquadric *quad = gluNewQuadric();
+    
 //    gluCylinder(quad, 1, 1, 1, 10, 10);
     glPopMatrix();
 
@@ -862,10 +881,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     glColor3d(0.2, 0.2, 0.2);
     drawWorm(eng.worms[i].pos, eng.base.pos, eng.MG_pos, eng.temp_t, &eng, i);
-//    drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
     glPushMatrix();
     glTranslated(eng.worms[i].pos.x, eng.worms[i].pos.y+1, eng.worms[i].pos.z);
-//    glScaled(0.1, 0.1, 0.1);
     glColor3d(1.0, 0.0, 0.0);
     
     for (int p=0; p<eng.ps.size && false /* TEMP */; p++)
@@ -877,9 +894,6 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
                           pow(1*eng.ps.p[p].frac(),2) +
                           unif()*0.0 ), 5),
                 0.0);
-                
-//      glColor3d(1,1,1);
-//      cout << "x: " << pos.x << endl;
       glEnable (GL_BLEND);
       glDepthMask (GL_FALSE);
       glBlendFunc (GL_SRC_ALPHA, GL_ONE);
@@ -914,7 +928,9 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
-
+  
+} // sten 
+  
   // Swap the contents of the front and back buffers so we see what we
   // just drew. This should only be done if double buffering is enabled.
   gldrawable->swap_buffers();

@@ -87,8 +87,12 @@ struct worm {
   int valid;
   Point3D pos;
   double life;
+  double L;
+  double frac() {
+    return life/L;
+  }
   int burning;
-  worm() : valid(0) {}
+  worm() : valid(0), L(10) {}
 };
 
 struct game_engine {
@@ -110,7 +114,7 @@ struct game_engine {
   {
     if (!worms[index].burning) {
       worms[index].burning = 1;
-      worms[index].life = 10;
+      worms[index].L = worms[index].life = 10;
     }
   }
   
@@ -123,7 +127,7 @@ struct game_engine {
     ps.update();
     
     for(int i=0; i<num_worms; i++) {
-      worms[i].life--;
+      //worms[i].life--;
       if (worms[i].burning) 
       {
         if (worms[i].life < 0) {
@@ -143,12 +147,15 @@ struct game_engine {
         worms[i].pos.y = 0;
 //        cout << "new worm: " << worms[i].pos << endl;
       } else {
-      //continue; // TEMP
-        Vector3D dir = (base.pos-worms[i].pos);
-        dir.normalize();
-        worms[i].pos = worms[i].pos + 0.1*dir;
-        if ((base.pos-worms[i].pos).length() < 1) {
-          worms[i].valid = 0;
+      //continue; // TEMP, pause worm
+        if (!worms[i].burning)
+        {
+          Vector3D dir = (base.pos-worms[i].pos);
+          dir.normalize();
+          worms[i].pos = worms[i].pos + 0.1*dir;
+          if ((base.pos-worms[i].pos).length() < 1) {
+            worms[i].valid = 0;
+          }
         }
       }
     }
