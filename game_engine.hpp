@@ -101,6 +101,8 @@ struct game_engine {
   } ground;
   struct {
     Point3D pos;
+    int hit;
+    int H;
   } base;
   
   int num_worms;
@@ -125,9 +127,11 @@ struct game_engine {
     //if (clock_seconds() > 2) num_worms = max(num_worms, 1);
     
     ps.update();
+    base.hit--;
+    if (base.hit < 0) base.hit = 0;
     
     for(int i=0; i<num_worms; i++) {
-      //worms[i].life--;
+      worms[i].life--;
       if (worms[i].burning) 
       {
         if (worms[i].life < 0) {
@@ -138,9 +142,13 @@ struct game_engine {
       if (!worms[i].valid) {
         worms[i].valid = 1;
         worms[i].burning = 0;
-        worms[i].pos.x = -ground.width + (rand() % (2*(int)ground.width));
-        worms[i].pos.z = -ground.length + (rand() % (2*(int)ground.length));
+        double w = ( (unif()*2.0)-1.0 ) * 0.5*ground.width;
+        worms[i].pos.x = base.pos.x + w + (w < 0 ? -1 : 1)*0.5*ground.width;
         
+        double ll = ( (unif()*2.0)-1.0 ) * 0.5*ground.length;
+        worms[i].pos.z = base.pos.z + ll + (ll < 0 ? -1 : 1)*0.5*ground.length;
+        
+                
 //        worms[i].pos.x = 8;
 //        worms[i].pos.z = -4;
         
@@ -150,11 +158,15 @@ struct game_engine {
       //continue; // TEMP, pause worm
         if (!worms[i].burning)
         {
+          double thresh = 2.0;
           Vector3D dir = (base.pos-worms[i].pos);
           dir.normalize();
-          worms[i].pos = worms[i].pos + 0.1*dir;
-          if ((base.pos-worms[i].pos).length() < 1) {
-            worms[i].valid = 0;
+          if ( !( (base.pos-worms[i].pos).length() < thresh) )
+            worms[i].pos = worms[i].pos + 0.1*dir;
+            
+          if ((base.pos-worms[i].pos).length() < thresh) {
+//            worms[i].valid = 0;
+            base.hit = base.H = 10;
           }
         }
       }
@@ -167,7 +179,8 @@ struct game_engine {
     ground.length = 10;
     ground.width = 20;
     base.pos.x = base.pos.y = base.pos.x = 0;
-    num_worms = 1;    
+    base.hit = 0;
+    num_worms = 4;    
   }
 };
 

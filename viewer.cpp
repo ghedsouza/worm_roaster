@@ -213,6 +213,8 @@ void Viewer::on_realize()
 
 void Viewer::drawCube(double x, double y, double z)
 {
+  x -= 0.5;
+  z -= 0.5;
   glBegin(GL_QUADS);
   if (multi) glColor3d(multi_colours[0][0],multi_colours[0][1], multi_colours[0][2]);
   glVertex3d(x, y, z);
@@ -873,8 +875,48 @@ for (int sten=0; sten<2; sten++) {
   glDisable(GL_TEXTURE_2D);
 
   // draw base
-  glColor3d(0.0, 0.0, 0.0);
+  glColor3d(0.5, 0.5, 0.5);
   drawCube(eng.base.pos.x,eng.base.pos.y, eng.base.pos.z);
+  glPushMatrix();    
+    glTranslated(eng.base.pos.x,eng.base.pos.y, eng.base.pos.z);
+    
+    if (eng.base.hit) {
+      glPushMatrix();
+      glScaled(2,2,2);
+//      glTranslated(0.5, 0, 0.5);
+      glEnable (GL_BLEND);
+      glDepthMask (GL_FALSE);
+      glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+      int num_sparks = int( double(eng.base.hit)/double(eng.base.H) * 1000) ;
+      glColor3d(0.5, 0.5, 0.9);
+      for(int spark=0; spark<num_sparks; spark++)
+      {
+        double size = 0.1;
+        double ro = unif() * 2 * M_PI;
+        double theta = unif() * M_PI;
+        Point3D pos(sin(theta)*cos(ro), sin(theta)*sin(ro), cos(theta));
+        Vector3D v1 = Vector3D(0,0,1).cross( pos-Point3D(0,0,0));
+        Vector3D v2 = Vector3D(0,1,0).cross( pos-Point3D(0,0,0));
+        v1.normalize();
+        v2.normalize();
+        Point3D v1p = pos + size*v1;
+        Point3D v2p = pos + size*v2;
+        glBegin(GL_TRIANGLES);
+        glVertex3d(pos.x, pos.y, pos.z);
+        glVertex3d(v1p.x, v1p.y, v1p.z);
+        glVertex3d(v2p.x, v2p.y, v2p.z);
+        glEnd();
+      }
+      glPopMatrix();
+      glDepthMask (GL_TRUE);
+      glDisable (GL_BLEND);
+      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
+    
+    glTranslated(0.0, 1, 0.0);
+    glColor3d(0.5, 0.5, 0.9);
+    gluSphere(quad, 0.5, 5, 5);
+  glPopMatrix();
   
   // draw worms
   for(int i=0; i<eng.num_worms; i++) {
