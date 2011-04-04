@@ -148,7 +148,7 @@ void init(void)
         GLenum texture_format;
         GLint  nOfColors;
 
-        if ( (surface = IMG_Load("bark.png")) ) { 
+        if ( (surface = IMG_Load("bark2.png")) ) { 
 
         // Check that the image's width is a power of 2
         if ( (surface->w & (surface->w - 1)) != 0 ) {
