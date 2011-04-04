@@ -86,6 +86,8 @@ struct particle_system
 struct worm {
   int valid;
   Point3D pos;
+  double life;
+  int burning;
   worm() : valid(0) {}
 };
 
@@ -102,6 +104,16 @@ struct game_engine {
   particle_system ps;
   int temp_t;
   
+  Point3D MG_pos;
+  
+  void burnt(int index)
+  {
+    if (!worms[index].burning) {
+      worms[index].burning = 1;
+      worms[index].life = 10;
+    }
+  }
+  
   void tick()
   {
     temp_t += 1;
@@ -111,18 +123,27 @@ struct game_engine {
     ps.update();
     
     for(int i=0; i<num_worms; i++) {
+      worms[i].life--;
+      if (worms[i].burning) 
+      {
+        if (worms[i].life < 0) {
+          worms[i].valid = 0;
+        }
+      }
+      
       if (!worms[i].valid) {
         worms[i].valid = 1;
+        worms[i].burning = 0;
         worms[i].pos.x = -ground.width + (rand() % (2*(int)ground.width));
         worms[i].pos.z = -ground.length + (rand() % (2*(int)ground.length));
         
-        worms[i].pos.x = 8;
-        worms[i].pos.z = -4;
+//        worms[i].pos.x = 8;
+//        worms[i].pos.z = -4;
         
         worms[i].pos.y = 0;
 //        cout << "new worm: " << worms[i].pos << endl;
       } else {
-      continue; // TEMP
+      //continue; // TEMP
         Vector3D dir = (base.pos-worms[i].pos);
         dir.normalize();
         worms[i].pos = worms[i].pos + 0.1*dir;
@@ -133,7 +154,7 @@ struct game_engine {
     }
   }
   
-  game_engine() : ps(2000) {
+  game_engine() : ps(1000) {
     temp_t = 0;
     ground.x = ground.y = ground.z = 0;
     ground.length = 10;
