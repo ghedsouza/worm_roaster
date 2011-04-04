@@ -21,7 +21,7 @@ static int win_size = 600;
 #define checkImageHeight NOISE_SIZE
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 
-static GLuint texName;
+static GLuint texName[3];
 
 void makeCheckImage(void)
 {
@@ -60,8 +60,8 @@ void init(void)
    makeCheckImage();
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-   glGenTextures(1, &texName);
-   glBindTexture(GL_TEXTURE_2D, texName);
+   glGenTextures(3, &texName[0]);
+   glBindTexture(GL_TEXTURE_2D, texName[0]);
 
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -72,6 +72,24 @@ void init(void)
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth, 
                 checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 
                 checkImage);
+                   
+  // bump map
+  glBindTexture(GL_TEXTURE_2D, texName[1]);
+  
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+ 	//Create normalisation cube map
+	glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, texName[2]);
+//	GenerateNormalisationCubeMap();
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+                
 }
 
 Viewer::Viewer() :
@@ -591,7 +609,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
 }
 
 
-void drawRing()
+void drawRing(int sten)
 {
   int segments = 20;
   double height_scale = 0.5;
@@ -660,6 +678,13 @@ void drawRing()
   glDepthMask (GL_FALSE);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE);
   
+  if (sten == 0) {
+    glEnable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_ALWAYS, 0, 1);
+  }
+    
   glColor3d(0.3, 0.3, 0.4);
   glBegin(GL_POLYGON);
   for(int i=0; i<=segments; i++)
@@ -667,6 +692,13 @@ void drawRing()
     glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
   }
   glEnd();
+  
+  if (sten == 0) {
+    glEnable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc(GL_ALWAYS, 0, 1);
+  }
   
   glDepthMask (GL_TRUE);
   glDisable (GL_BLEND);
@@ -710,12 +742,14 @@ void Viewer::drawMG()
   
   glTranslated(0, -2*rivet_rad_scale*1.2/2/2, handle_length*(1.45));
   glScaled(handle_length/2, 2*rivet_rad_scale*1.2, handle_length/2);
-  drawRing();
+  drawRing(sten);
   glPopMatrix();  
 }
 
 bool Viewer::on_expose_event(GdkEventExpose* event)
-{    
+{
+  GLUquadric *quad = gluNewQuadric();
+    
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
     
   if (!gldrawable) return false;
@@ -723,11 +757,50 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   if (!gldrawable->gl_begin(get_gl_context()))
     return false;
   
-  // Modify the current projection matrix so that we move the 
+for (int render=0; render<2; render++) {
+  sten = render;
+  if (sten == 0)
+  {
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glClearStencil(0);
+
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glDisable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NEVER, 1, 1);
+//    glColorMask(0,0,0,0);
+    glEnable(GL_DEPTH_TEST);
+//    glDisable(GL_DEPTH_TEST);
+
+    glPushMatrix();
+    glScaled(3,3,3);
+    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
+    gluCylinder(quad, 1, 1, 1, 10, 10);
+    glPopMatrix();
+    
+//    glStencilFunc(GL_ALWAYS, 0, 0);
+    
+    glPushMatrix();
+    glScaled(3,3,3);
+    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
+    gluCylinder(quad, 1, 1, 1, 10, 10);
+    glPopMatrix();
+    //continue;
+  }
+  else
+  {
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
+    glStencilFunc(GL_EQUAL, 0, 1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_DEPTH_TEST);
+  }
+  
+    // Modify the current projection matrix so that we move the 
   // camera away from the origin.  We'll draw the game at the
   // origin, and we need to back up to see it.
-
-  GLUquadric *quad = gluNewQuadric();
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -750,63 +823,20 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   // look at the ground from above-back
   glTranslated(0.0, -12.0, 0.0);
   
-for (int sten=0; sten<2; sten++) {
-  
-     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
-  
-  if (sten == 0)
-  {
-    continue;
-    // Clear the screen
-    //glClearStencil(0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 1);
-    glColorMask(0,0,0,0);
-    
-    glEnable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-    
-    
-    glPushMatrix();
-    glScaled(3,3,3);
-    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
-    gluCylinder(quad, 1, 1, 1, 10, 10);
-    glPopMatrix();
-    
-    glStencilFunc(GL_ALWAYS, 0, 0);
-    
-        glPushMatrix();
-    glScaled(3,3,3);
-    glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
-    gluCylinder(quad, 1, 1, 1, 10, 10);
-    glPopMatrix();
-    
-    glDisable(GL_STENCIL_TEST);
-    
-    continue;
-  }
-  else
-  {
-    
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (sten==0) {
+    glScaled(1.2, 1.2, 1.2);
+  } else {
   }
   
-  
-  
-    glPushMatrix();
+  glPushMatrix();
     glColor3d(1,1,1);
     glScaled(1,1,1);
-//    glTranslated(g_x, 10, -g_y);
     glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
-    
-//    gluCylinder(quad, 1, 1, 1, 10, 10);
-    glPopMatrix();
+  glPopMatrix();
 
-    GLfloat light_position[] = { 0, 20.0, 0, 1};
-    glEnable(GL_LIGHT0);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  GLfloat light_position[] = { 0, 20.0, 0, 1};
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
   float LightDir[3] = {0.0f, -1, 0};
   GLfloat color[4] = { 2.0, 1.0, 1.0, 1.0 };
@@ -828,7 +858,7 @@ for (int sten=0; sten<2; sten++) {
    glEnable(GL_TEXTURE_2D);
 //   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-   glBindTexture(GL_TEXTURE_2D, texName);
+   glBindTexture(GL_TEXTURE_2D, texName[0]);
   
   glNormal3d(0, 1, 0);
   

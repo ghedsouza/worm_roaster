@@ -76,6 +76,8 @@ private:
   
   double multi_colours[6][3];
   game_engine eng;
+  
+  int sten;
 };
 
 #endif
