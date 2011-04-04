@@ -679,32 +679,43 @@ void drawRing(int sten)
   glBlendFunc (GL_SRC_ALPHA, GL_ONE);
   
   if (sten == 0) {
-    glEnable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+//    glDisable(GL_STENCIL_TEST);
+//    glEnable(GL_DEPTH_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
+//    glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+    glStencilFunc(GL_ALWAYS, 0, 1);
+  } else if (sten == -1) {
+    glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);    
     glStencilFunc(GL_ALWAYS, 0, 1);
   }
-    
-  glColor3d(0.3, 0.3, 0.4);
-  glBegin(GL_POLYGON);
-  for(int i=0; i<=segments; i++)
-  { 
-    glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
+
+  //if (sten == 1)
+  {    
+    glColor3d(0.3, 0.3, 0.4);
+    glBegin(GL_POLYGON);
+    for(int i=0; i<=segments; i++)
+    { 
+      glVertex3d(x_vals.at(i)[1], 0, y_vals.at(i)[1]);
+    }
+    glEnd();
   }
-  glEnd();
   
   if (sten == 0) {
-    glEnable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
+//    glDisable(GL_STENCIL_TEST);
+//    glDisable(GL_DEPTH_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc(GL_ALWAYS, 0, 1);
+//    glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+    glStencilFunc(GL_EQUAL, 0, 1);
+  } else if (sten == -1) {
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);    
+    glStencilFunc(GL_EQUAL, 0, 1);
   }
   
   glDepthMask (GL_TRUE);
   glDisable (GL_BLEND);
 }
 
-void Viewer::drawMG()
+void Viewer::drawMG(int s_sten)
 {
   glPushMatrix();
   GLUquadric *quad = gluNewQuadric();
@@ -742,7 +753,7 @@ void Viewer::drawMG()
   
   glTranslated(0, -2*rivet_rad_scale*1.2/2/2, handle_length*(1.45));
   glScaled(handle_length/2, 2*rivet_rad_scale*1.2, handle_length/2);
-  drawRing(sten);
+  drawRing(s_sten);
   glPopMatrix();  
 }
 
@@ -761,14 +772,18 @@ for (int render=0; render<2; render++) {
   sten = render;
   if (sten == 0)
   {
+//    continue;
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    glClearStencil(0);
+    glClearStencil(1);
 
+//    glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    glDisable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NEVER, 1, 1);
+//    glDisable(GL_STENCIL_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 1, 1);
+    glStencilFunc(GL_NOTEQUAL, 1, 1);
 //    glColorMask(0,0,0,0);
     glEnable(GL_DEPTH_TEST);
 //    glDisable(GL_DEPTH_TEST);
@@ -790,11 +805,12 @@ for (int render=0; render<2; render++) {
   }
   else
   {
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
-    glStencilFunc(GL_EQUAL, 0, 1);
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glStencilFunc(GL_NOTEQUAL, 0, 1);
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glEnable(GL_STENCIL_TEST);
+//    glDisable(GL_STENCIL_TEST);    
     glEnable(GL_DEPTH_TEST);
   }
   
@@ -824,7 +840,10 @@ for (int render=0; render<2; render++) {
   glTranslated(0.0, -12.0, 0.0);
   
   if (sten==0) {
-    glScaled(1.2, 1.2, 1.2);
+    drawMG(-1);
+    glPushMatrix();
+    glScaled(1.3, 1.3, 1.3);
+    cout << "pass1: Scaled" << endl;
   } else {
   }
   
@@ -870,35 +889,40 @@ for (int render=0; render<2; render++) {
   glTexCoord2d (0.0, 1.0); glVertex3d(eng.ground.width,0,-eng.ground.length);
   glEnd();
   #endif
-
-  int res = 100;
-  for(int i=0; i<res; i++) {
-    for(int j=0; j<res; j++) {
-  glBegin(GL_QUADS);
-      double l_x = -eng.ground.width+(double(i)/res)*2.0*eng.ground.width;
-      double r_x = l_x + (2.0*eng.ground.width*1.0/res);
-      
-      double b_y = -eng.ground.length+(double(j)/res)*2.0*eng.ground.length;
-      double t_y = b_y + (2.0*eng.ground.width*1.0/res);
-      
-      
-      double tl_x = (double(i)/res);
-      double tr_x = (double(i+1)/res);
-      
-      double tb_y = (double(j)/res);
-      double tt_y = (double(j+1)/res);
-      
-      
-  glTexCoord2d (tl_x, tb_y);
-  glVertex3d(l_x, 0, b_y);
-             
-  glTexCoord2d (tr_x, tb_y);
-  glVertex3d(r_x, 0, b_y);
   
-  glTexCoord2d (tr_x, tt_y); glVertex3d(r_x, 0, t_y);  
-  glTexCoord2d (tl_x, tt_y); glVertex3d(l_x, 0, t_y);
-  glEnd();
-  }
+//  if (sten == 0)
+  {
+    int res = 100;
+//    if (sten == 0)
+//      res = 2;
+    for(int i=0; i<res; i++) {
+      for(int j=0; j<res; j++) {
+        glBegin(GL_QUADS);
+        double l_x = -eng.ground.width+(double(i)/res)*2.0*eng.ground.width;
+        double r_x = l_x + (2.0*eng.ground.width*1.0/res);
+        
+        double b_y = -eng.ground.length+(double(j)/res)*2.0*eng.ground.length;
+        double t_y = b_y + (2.0*eng.ground.width*1.0/res);
+        
+        
+        double tl_x = (double(i)/res);
+        double tr_x = (double(i+1)/res);
+        
+        double tb_y = (double(j)/res);
+        double tt_y = (double(j+1)/res);
+        
+        
+        glTexCoord2d (tl_x, tb_y);
+        glVertex3d(l_x, 0, b_y);
+                   
+        glTexCoord2d (tr_x, tb_y);
+        glVertex3d(r_x, 0, b_y);
+
+        glTexCoord2d (tr_x, tt_y); glVertex3d(r_x, 0, t_y);  
+        glTexCoord2d (tl_x, tt_y); glVertex3d(l_x, 0, t_y);
+        glEnd();
+      }
+    }
   }
 
   
@@ -993,7 +1017,11 @@ for (int render=0; render<2; render++) {
     glPopMatrix();
   }
   
-  drawMG();
+  if (sten == 0) {
+    glPopMatrix();
+  }
+  
+  drawMG(sten);
   
   // We pushed a matrix onto the PROJECTION stack earlier, we 
   // need to pop it.

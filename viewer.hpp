@@ -59,7 +59,7 @@ private:
   bool rot_tick();
   void drawGame();
   void reset_multi_colours();
-  void drawMG();
+  void drawMG(int s_sten);
   
   int mouse_x, mouse_y, x_rot_angle, y_rot_angle, z_rot_angle;
   unsigned int last_motion_time;
