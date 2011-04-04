@@ -69,7 +69,7 @@ double PerlinNoise_2D(double x, double y, double per, double Oct)
 
   for(int i=0; i<=n; i++)
   {
-    double frequency = pow(2,i);
+    double frequency = pow(2.0,i);
     double amplitude = pow(p,i);
 
     total = total + InterpolatedNoise_1(x * frequency, y * frequency) * amplitude;
