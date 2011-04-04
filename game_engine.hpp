@@ -158,7 +158,7 @@ struct game_engine {
       //continue; // TEMP, pause worm
         if (!worms[i].burning)
         {
-          double thresh = 2.0;
+          double thresh = 2.5;
           Vector3D dir = (base.pos-worms[i].pos);
           dir.normalize();
           if ( !( (base.pos-worms[i].pos).length() < thresh) )

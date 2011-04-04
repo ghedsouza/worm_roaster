@@ -383,7 +383,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
 //  cout << "a: " << tobase << endl;
   static double tilt = 10.0;
   static int dir = 1;
-  glColor3d(0,1,0);
+  glColor3d(80.0/255.0, 24.0/255.0, 0);
   GLUquadric *quad = gluNewQuadric();
   glPushMatrix();
   if (eng->worms[index].burning)
@@ -409,6 +409,10 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
 //  trans = rotation(45, 'y');
 //  temp_t += 1;
   
+  glPushMatrix();
+//  gluSphere(quad, 1, 10, 10);
+  glPopMatrix();
+  
   int circle_segments = 8;
   vector<Point3D> ring1, ring2; 
   ring1.resize(circle_segments);
@@ -425,7 +429,6 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
   }
 //  exit(0);
 
-  glColor3d(0.2, 0.2, 0.2);
   Vector3D normal = (A->at(1) -A->at(0)).cross(A->at(2) -A->at(1));
   glNormal3d(normal[0], normal[1], normal[2]);
   glBegin(GL_POLYGON);        for (int p=0; p< eng->ps.size ; p++)
@@ -455,7 +458,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
     
     bool istilt = false;
     if ((r%3) == 2 && 1) {
-      glColor3d(0.1,0.1,0.1);
+//      glColor3d(0.1,0.1,0.1);
       double sign = (dir2 < 0) ? -1 : 1;
       istilt = true;
       trans = trans * translation(Vector3D(0, 0, 0)) * translation(Vector3D(sign*-1, 0, 0)) *
@@ -466,7 +469,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
       else if (tilt < 0) dir *= -1;
       
     } else {
-      glColor3d(0.2,0.2,0.3);  
+//      glColor3d(0.2,0.2,0.3);  
       trans = trans * translation(Vector3D(0, 0, 1 + sf*ls));
     }
     
@@ -489,7 +492,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
     }
     
     if (r == 0) {
-      glColor3d(0.3, 0.1, 0.1);
+//      glColor3d(0.3, 0.1, 0.1);
     }
     glBegin(GL_POLYGON);
     for(int i=0; i<ring1.size(); i++)
@@ -501,9 +504,9 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
     
     #if 1
     if (r == 1) {
-      glColor3d(0.0, 0, 0.3);
+//      glColor3d(0.0, 0, 0.3);
     } else if (red) { 
-      glColor3d(1.0, 0, 0.3);
+//      glColor3d(1.0, 0, 0.3);
     }
     for(int i=0; i<circle_segments; i++)
     {
@@ -568,12 +571,9 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
           glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
         }
       }
-      glColor3d(0.2, 0.2, 0.2);
-          if (r == 1) {
-      glColor3d(0.0, 0, 0.3);
-    } else if (red) { 
-      glColor3d(1.0, 0, 0.3);
-    }
+      
+      glColor3d(80.0/255.0, 24.0/255.0, 0);
+      
       glBegin(GL_POLYGON);
       glVertex3d(pt1a.x, pt1a.y, pt1a.z);
       glVertex3d(pt2a.x, pt2a.y, pt2a.z);
