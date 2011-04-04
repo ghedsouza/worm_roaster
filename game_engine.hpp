@@ -100,9 +100,11 @@ struct game_engine {
   int num_worms;
   worm worms[NUM_WORMS];
   particle_system ps;
+  int temp_t;
   
   void tick()
   {
+    temp_t += 1;
     //cout << "tick: sec: " << clock_seconds() << endl;
     //if (clock_seconds() > 2) num_worms = max(num_worms, 1);
     
@@ -113,12 +115,17 @@ struct game_engine {
         worms[i].valid = 1;
         worms[i].pos.x = -ground.width + (rand() % (2*(int)ground.width));
         worms[i].pos.z = -ground.length + (rand() % (2*(int)ground.length));
+        
+        worms[i].pos.x = 8;
+        worms[i].pos.z = -4;
+        
         worms[i].pos.y = 0;
 //        cout << "new worm: " << worms[i].pos << endl;
       } else {
+      continue; // TEMP
         Vector3D dir = (base.pos-worms[i].pos);
         dir.normalize();
-//        worms[i].pos = worms[i].pos + 0.2*dir;
+        worms[i].pos = worms[i].pos + 0.1*dir;
         if ((base.pos-worms[i].pos).length() < 1) {
           worms[i].valid = 0;
         }
@@ -127,11 +134,12 @@ struct game_engine {
   }
   
   game_engine() : ps(2000) {
+    temp_t = 0;
     ground.x = ground.y = ground.z = 0;
     ground.length = 10;
     ground.width = 20;
     base.pos.x = base.pos.y = base.pos.x = 0;
-    num_worms = 4;    
+    num_worms = 1;    
   }
 };
 

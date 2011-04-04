@@ -66,6 +66,8 @@ private:
   int last_motion_diff, last_motion_button[3];
   int shift, scale;
   
+  double g_x, g_y;
+  
   Game game;
   
   sigc::connection rot_tick_conn;

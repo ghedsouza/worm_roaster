@@ -54,6 +54,8 @@ void init(void)
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel(GL_FLAT);
    glEnable(GL_DEPTH_TEST);
+   
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
    makeCheckImage();
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -121,7 +123,8 @@ void Viewer::set_config()
   //  - double-buffered rendering to avoid tearing/flickering
   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB |
                                      Gdk::GL::MODE_DEPTH |
-                                     Gdk::GL::MODE_DOUBLE);
+                                     Gdk::GL::MODE_DOUBLE |
+                                     Gdk::GL::MODE_STENCIL);
     
   if (glconfig == 0) {
     // If we can't get this configuration, die
@@ -170,12 +173,12 @@ void Viewer::on_realize()
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  glClearColor(0.7, 0.7, 1.0, 0.0);
-  #if 0
-  GLfloat mat_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+//  glClearColor(0.7, 0.7, 1.0, 0.0);
+  #if 1
+   GLfloat mat_ambient[] = { 0.1, 0.1, 0.1, 1.0 };
    GLfloat mat_specular[] = { 0.0, 0.0, 0.0, 0.0 };
    GLfloat mat_shininess[] = { 5.0 };
-   GLfloat light_position[] = { 1.0, 1.0, -1.0, 0.0 };
+
    GLfloat model_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
 
    glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -184,15 +187,23 @@ void Viewer::on_realize()
    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, model_ambient);
 
-//   glEnable(GL_LIGHTING);
-   glEnable(GL_LIGHT0);
+   glEnable(GL_LIGHTING);
    glEnable(GL_DEPTH_TEST);
     glShadeModel (GL_SMOOTH);
    glEnable ( GL_COLOR_MATERIAL ) ;
 
+
+
+  float LightDir[3] = {0.0f, -1, 0}; // towards the viewer
+  GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+   glEnable(GL_LIGHT1);
+   glLighti(GL_LIGHT1, GL_SPOT_CUTOFF, 30); 
+
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, LightDir);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, color);
 //  glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE ) ;
 #endif
   gldrawable->gl_end();
@@ -236,7 +247,6 @@ void Viewer::drawCube(double x, double y, double z)
   glVertex3d(x+1, y, z+1);
   glVertex3d(x+1, y+1, z+1);
   glVertex3d(x+1, y+1, z);
-    
   glEnd();
 }
 
@@ -251,6 +261,8 @@ void Viewer::drawBorder()
     drawCube(x,-1,0);
   }
 }
+
+
 
 void Viewer::tick()
 {
@@ -360,19 +372,24 @@ void vertp(Point3D p)
   glVertex3d(p.x, p.y, p.z);
 }
 
-void drawWorm()
+void drawWorm(Point3D pos, Point3D base, double temp_t)
 {
-  static int temp_t = 0;
+  Vector3D tobase = (base-pos);
+  double tobase_angle = rad_to_deg(atan2(-tobase[2], tobase[0])) + 180;
+//  cout << "a: " << tobase << endl;
   static double tilt = 10.0;
   static int dir = 1;
   glColor3d(0,1,0);
   GLUquadric *quad = gluNewQuadric();
   glPushMatrix();
-  glTranslated(4, 0, 0);
+  glTranslated(pos.x, pos.y, pos.z);
+  glRotated(tobase_angle, 0, 1, 0);
   glScaled(1,1,1);
   //gluDisk(quad, 0,10,10,10);
   Matrix4x4 trans;
-
+  
+  double distance = sin(deg_to_rad(2*temp_t));
+  
   double ang = 90*0.5*(1+sin(deg_to_rad(2*temp_t)));
   double dist = 45-fabs(ang-45);
   double ls = dist/45;
@@ -381,11 +398,10 @@ void drawWorm()
 //  trans = trans * translation(Vector3D(-10*sin(deg_to_rad(temp_t)), 0, 0));
 //  trans = trans * translation(Vector3D(0, 0, 2 * (90-ang)/90 ));
   double xxx = -2*sin(deg_to_rad(temp_t));
-  trans = trans * translation(Vector3D(xxx, 0, 2*sin(xxx) ));
-
+//  trans = trans * translation(Vector3D(xxx, 0, 2*sin(xxx) ));
   trans = trans * translation(Vector3D(0, 0, 0)) * rotation(45 + ang, 'y') * translation(Vector3D(0, 0, 0));
 //  trans = rotation(45, 'y');
-  temp_t += 1;
+//  temp_t += 1;
   
   int circle_segments = 10;
   vector<Point3D> ring1, ring2; 
@@ -393,7 +409,6 @@ void drawWorm()
   ring2.resize(circle_segments);
   
   vector<Point3D> *A = &ring1, *B = &ring2;
-  
   for(int t=0; t<circle_segments; t++)
   {
     double deg = double(t)/circle_segments * 360;
@@ -403,7 +418,10 @@ void drawWorm()
 //    cout << "p: " << A->at(t) << endl;
   }
 //  exit(0);
-  glColor3d(0,0,1);  
+
+  glColor3d(0.2, 0.2, 0.2);
+  Vector3D normal = (A->at(1) -A->at(0)).cross(A->at(2) -A->at(1));
+  glNormal3d(normal[0], normal[1], normal[2]);
   glBegin(GL_POLYGON);
   for(int i=0; i<A->size(); i++)
   {
@@ -429,7 +447,7 @@ void drawWorm()
     
     bool istilt = false;
     if ((r%3) == 2 && 1) {
-      glColor3d(1,0,0);  
+      glColor3d(0.1,0.1,0.1);  
       double sign = (dir2 < 0) ? -1 : 1;
       istilt = true;
       trans = trans * translation(Vector3D(0, 0, 0)) * translation(Vector3D(sign*-1, 0, 0)) *
@@ -440,7 +458,7 @@ void drawWorm()
       else if (tilt < 0) dir *= -1;
       
     } else {
-      glColor3d(0,0,1);  
+      glColor3d(0.2,0.2,0.3);  
       trans = trans * translation(Vector3D(0, 0, 1 + sf*ls));
     }
     
@@ -454,8 +472,8 @@ void drawWorm()
     //    cout << "after: " << ring2.at(t) << endl;
     }
     
-    if (r == 1) {
-      glColor3d(0.8, 0, 0.8);
+    if (r == 0) {
+      glColor3d(0.3, 0.1, 0.1);
     }
     glBegin(GL_POLYGON);
     for(int i=0; i<ring1.size(); i++)
@@ -467,7 +485,7 @@ void drawWorm()
     
     #if 1
     if (r == 1) {
-      glColor3d(0.5, 0, 0.5);
+      glColor3d(0.0, 0, 0.3);
     }
     for(int i=0; i<circle_segments; i++)
     {
@@ -477,7 +495,10 @@ void drawWorm()
       Point3D pt2b = B->at((i+1)%ring2.size());
       
   //    cout << "1a: " << pt1a << ", 1b: " << pt1b << ", pt2a: " << pt2a << ", pt2b: " << pt2b << endl;
-        
+      
+      Vector3D normal = (pt1b -pt1a).cross(pt2b -pt1a);
+      glNormal3d(normal[0], normal[1], normal[2]);  
+      
       glBegin(GL_POLYGON);
       glVertex3d(pt1a.x, pt1a.y, pt1a.z);
       glVertex3d(pt2a.x, pt2a.y, pt2a.z);
@@ -491,160 +512,9 @@ void drawWorm()
     B = tmp;
   }
   
-    
-  #if 0
-  for(int t=0; t<circle_segments; t++)
-  {
-    double deg = double(t)/circle_segments * 360;
-    double cx = cos(deg_to_rad(deg));
-    double cy = sin(deg_to_rad(deg));
-    ring1.at(t) = Point3D(cx, cy, 0);
-  }
-  trans = trans * translation(Vector3D(-0.5, 0, 0)) * rotation(tilt, 'y') * translation(Vector3D(0.5, 0, 0));
-  tilt += 0.1;
-  for(int t=0; t<circle_segments; t++)
-  {
-    double deg = double(t)/circle_segments * 360;
-    double cx = cos(deg_to_rad(deg));
-    double cy = sin(deg_to_rad(deg));
-//    cout << "before: " << Point3D(cx, cy, 0) << endl;
-    ring2.at(t) = trans * Point3D(cx, cy, 0);
-//    cout << "after: " << ring2.at(t) << endl;
-  }
-//  exit(-1);
-#if 0
-    glBegin(GL_POLYGON);      
-    glVertex3d(0, 0, 0);
-    glVertex3d(0, 1, 0);
-    glVertex3d(1, 1, 0);
-    glVertex3d(1, 0, 0);
-    glEnd();
-    #endif
-
-  glColor3d(1,0,0);  
-  glBegin(GL_POLYGON);
-  for(int i=0; i<ring1.size(); i++)
-  {
-    Point3D p = ring1.at(i);
-//    cout << "a p: " << p << endl;
-    glVertex3d(p.x, p.y, p.z);
-  }
-  glEnd();
-  
-  
-  glColor3d(0,0,1);
-  glBegin(GL_POLYGON);
-  for(int i=0; i<ring2.size(); i++)
-  {
-    Point3D p = ring2.at(i);
-//    cout << "b p: " << p << endl;
-    glVertex3d(p.x, p.y, p.z);
-  }
-  glEnd();
-//  exit(-1);
-  
-  for(int i=0; i<circle_segments; i++)
-  {
-    Point3D pt1a = ring1.at(i);
-    Point3D pt1b = ring1.at((i+1)%ring1.size());
-    Point3D pt2a = ring2.at(i);
-    Point3D pt2b = ring2.at((i+1)%ring2.size());
-    
-//    cout << "1a: " << pt1a << ", 1b: " << pt1b << ", pt2a: " << pt2a << ", pt2b: " << pt2b << endl;
-      
-    glBegin(GL_POLYGON);
-    glVertex3d(pt1a.x, pt1a.y, pt1a.z);
-    glVertex3d(pt2a.x, pt2a.y, pt2a.z);
-    glVertex3d(pt2b.x, pt2b.y, pt2b.z);
-    glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
-    glEnd();
-  }
-//  exit(-1);
-#endif
   glPopMatrix();
 }
 
-void drawWorm_old()
-{
-#if 1
-  int T = 10;
-  for(int t=0; t<T; t++)
-  {
-    double tt = double(t)/double(T)*3;
-    
-  }
-
-#else
-
-
-
-  double length = 2;
-  int prec = 30;
-  
-  vector< vector<Point3D> > rings;
-  rings.resize(prec);
-  
-  for(int p=0; p<prec; p++)
-  {
-    double x1 = double(p)/double(prec)*length;
-    double z1 = sin(x1);
-    
-    double x2 = double(p+1)/double(prec)*length;
-    double z2 = sin(x2);
-    
-    double angle = rad_to_deg( atan2(z2-z1, x2-x1) );
-    if (angle < 0) angle = (90+angle);
-//    cout << "angle: " << angle << endl;
-    
-    Matrix4x4 rot = rotation(angle, 'y');
-    
-    int circle_segments = 3;
-    rings.at(p).resize(circle_segments);
-    
-    for(int c=0; c<circle_segments; c++)
-    {
-      double d = double(c)/double(circle_segments)*360;
-//      cout << "d: " << d << endl;
-      double cx = cos(deg_to_rad(d));
-      double cy = sin(deg_to_rad(d));
-//      cout << "cx : " << cx << ", cy: " << cy << endl;
-      Point3D cp(cx, cy, 0);      
-      cp = rot*cp;
-      cp = cp + (Point3D(x1, 0, z1)-Point3D(0,0,0));
-      rings.at(p).at(c) = cp;
-    }
-  }
-//  exit(-1);
-  
-
-  glPushMatrix();
-  glTranslated(2,0,0);
-  glScaled(3,3,3);
-  
-  for(int i=0; i<rings.size()-1; i++)
-  {
-    double acc = 0.2;
-    vector<Point3D> points = rings.at(i);
-    for(int j=0; j<points.size(); j++)
-    { 
-      glColor3d(0.5, 0.2+acc, 0.2+acc);
-      acc += 0.2;
-      Point3D pt1a = points.at(j);
-      Point3D pt1b = points.at((j+1)%points.size());
-      Point3D pt2a = rings.at(i+1).at(j);
-      Point3D pt2b = rings.at(i+1).at((j+1)%points.size());
-      glBegin(GL_POLYGON);      
-      glVertex3d(pt1a.x, pt1a.y, pt1a.z);
-      glVertex3d(pt2a.x, pt2a.y, pt2a.z);
-      glVertex3d(pt2b.x, pt2b.y, pt2b.z);
-      glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
-      glEnd();
-      break;
-    }
-  }
-  glPopMatrix();
-#endif
-}
 
 void drawRing()
 {
@@ -736,14 +606,14 @@ void Viewer::drawMG()
   double rivet_scale = 7.0;
   double rivet_rad_scale = 1.2;
   glColor3d(0.1, 0.1, 0.1);
-  double g_x = max(0.0, double(min(win_size, mouse_x)))/double(win_size);
-  double g_y = (600.0 -double(max(0.0, (double)min(win_size, mouse_y))) )/double(win_size);
+  g_x = max(0.0, double(min(win_size, mouse_x)))/double(win_size);
+  g_y = (600.0 -double(max(0.0, (double)min(win_size, mouse_y))) )/double(win_size);
   
   g_x -= 0.5;
   g_y -= 0.5;
   
-  g_x *= 4*eng.ground.width;
-  g_y *= 4*eng.ground.length;
+  g_x *= 8*eng.ground.width;
+  g_y *= 8*eng.ground.length;
   
   glTranslated(g_x, 5.0, -(g_y-handle_length*3/2));
   glRotated(180, 0,1,0);
@@ -801,21 +671,85 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   // look at the ground from above-back
   glTranslated(0.0, -12.0, 0.0);
   
+  
+     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         glPolygonMode( GL_FRONT_AND_BACK, GL_FILL ); 
+  
+    glPushMatrix();
+    glColor3d(1,1,1);
+    glScaled(1,1,1);
+    glTranslated(g_x, 10, -g_y);
+    GLUquadric *quad = gluNewQuadric();
+    gluCylinder(quad, 1, 1, 1, 10, 10);
+    glPopMatrix();
+
+    GLfloat light_position[] = { g_x, 20.0, -g_y, 1};
+    //glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+  float LightDir[3] = {0.0f, -1, 0};
+  GLfloat color[4] = { 2.0, 1.0, 1.0, 1.0 };
+  GLfloat position[4] ={ g_x, 80.0, -g_y, 1};
+
+  glEnable(GL_LIGHT1);
+//  glDisable(GL_LIGHT0);
+  
+  glLighti(GL_LIGHT1, GL_SPOT_CUTOFF, 1);
+
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, LightDir);
+
+	glLightfv(GL_LIGHT1, GL_POSITION, position);
+
+  
   // draw ground
   //glColor3d(112.0/255, 64.0/255, 0.0/255);
   
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glEnable(GL_TEXTURE_2D);
-   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+//   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
    glBindTexture(GL_TEXTURE_2D, texName);
-//    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
   
+  glNormal3d(0, 1, 0);
+  
+  #if 0
   glBegin(GL_QUADS);
   glTexCoord2d (0.0, 0.0); glVertex3d(-eng.ground.width,0,-eng.ground.length);
   glTexCoord2d (1.0, 0.0); glVertex3d(-eng.ground.width,0,eng.ground.length);
   glTexCoord2d (1.0, 1.0); glVertex3d(eng.ground.width,0,eng.ground.length);  
   glTexCoord2d (0.0, 1.0); glVertex3d(eng.ground.width,0,-eng.ground.length);
   glEnd();
+  #endif
+
+  int res = 100;
+  for(int i=0; i<res; i++) {
+    for(int j=0; j<res; j++) {
+  glBegin(GL_QUADS);
+      double l_x = -eng.ground.width+(double(i)/res)*2.0*eng.ground.width;
+      double r_x = l_x + (2.0*eng.ground.width*1.0/res);
+      
+      double b_y = -eng.ground.length+(double(j)/res)*2.0*eng.ground.length;
+      double t_y = b_y + (2.0*eng.ground.width*1.0/res);
+      
+      
+      double tl_x = (double(i)/res);
+      double tr_x = (double(i+1)/res);
+      
+      double tb_y = (double(j)/res);
+      double tt_y = (double(j+1)/res);
+      
+      
+  glTexCoord2d (tl_x, tb_y);
+  glVertex3d(l_x, 0, b_y);
+             
+  glTexCoord2d (tr_x, tb_y);
+  glVertex3d(r_x, 0, b_y);
+  
+  glTexCoord2d (tr_x, tt_y); glVertex3d(r_x, 0, t_y);  
+  glTexCoord2d (tl_x, tt_y); glVertex3d(l_x, 0, t_y);
+  glEnd();
+  }
+  }
+
   
   glDisable(GL_TEXTURE_2D);
 
@@ -827,7 +761,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
   for(int i=0; i<eng.num_worms; i++) {
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     glColor3d(0.2, 0.2, 0.2);
-    drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
+    drawWorm(eng.worms[i].pos, eng.base.pos, eng.temp_t);
+//    drawCube(eng.worms[i].pos.x, eng.worms[i].pos.y, eng.worms[i].pos.z);
     glPushMatrix();
     glTranslated(eng.worms[i].pos.x, eng.worms[i].pos.y+1, eng.worms[i].pos.z);
 //    glScaled(0.1, 0.1, 0.1);
@@ -841,11 +776,19 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
                 0.5*pow(( 0.5*0.5*( pow(2.0, -10*fabs(pos.x-0.5)) + pow(2.0, -10*fabs(pos.y-0.5)) )+ 
                           pow(1*eng.ps.p[p].frac(),2) +
                           unif()*0.0 ), 5),
-                0.0);  
+                0.0);
+                
+//      glColor3d(1,1,1);
 //      cout << "x: " << pos.x << endl;
       glEnable (GL_BLEND);
       glDepthMask (GL_FALSE);
       glBlendFunc (GL_SRC_ALPHA, GL_ONE);
+      
+      glPushMatrix();
+      glTranslated(pos.x, pos.y, pos.z);
+      glRotated(-y_rot_angle, 0, 1, 0);
+      glRotated(-x_rot_angle, 1, 0, 0);
+      glTranslated(-pos.x, -pos.y, -pos.z);
       
       glBegin(GL_QUADS);
       glVertex3d(pos.x, pos.y, pos.z);
@@ -854,6 +797,8 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
       glVertex3d(pos.x+size, pos.y, pos.z);      
       glEnd();
       
+      glPopMatrix();
+      
       glDepthMask (GL_TRUE);
       glDisable (GL_BLEND);
       glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
@@ -861,8 +806,6 @@ bool Viewer::on_expose_event(GdkEventExpose* event)
 //    exit(-1);
     glPopMatrix();
   }
-  
-  drawWorm();
   
   drawMG();
   
