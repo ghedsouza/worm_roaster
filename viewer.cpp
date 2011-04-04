@@ -19,6 +19,7 @@ static int win_size = 600;
 #define NOISE_SIZE 256
 #define checkImageWidth NOISE_SIZE
 #define checkImageHeight NOISE_SIZE
+
 static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 
 static GLuint texName[3];
@@ -395,7 +396,11 @@ void vertp(Point3D p)
 }
 
 void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_engine *eng, int index)
-{
+{ 
+  if (eng->worms[index].burnt) {
+    temp_t = eng->worms[index].temp_t;
+  }
+  
   Vector3D tobase = (base-pos);
   double tobase_angle = rad_to_deg(atan2(-tobase[2], tobase[0])) + 180;
 //  cout << "a: " << tobase << endl;
@@ -457,9 +462,9 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
   }
   glEnd();
   int dir2 = 1;
-  for(int r=0; r<13; r++)
+  for(int r=0; r<7; r++)
   {
-    eng->ps.update();
+//    eng->ps.update();
     bool red = false;
     double ang2 = ang-45;
     if (ang2 < 0) {
@@ -503,7 +508,7 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
         Point3D apos = ( rotation(tobase_angle, 'y')*B->at(t) ) + (pos -Point3D(0,0,0));
         if (fabs(apos.x-MG_pos.x) < margin && fabs(apos.z-MG_pos.z) < margin) {
           red = true;
-          eng->burnt(index);
+          eng->burnt(index, temp_t);
         }
       }
     //    cout << "after: " << ring2.at(t) << endl;
@@ -842,7 +847,7 @@ for (int render=0; render<2; render++) {
   if (sten==0) {
     drawMG(-1);
     glPushMatrix();
-    glScaled(1.3, 1.3, 1.3);
+    glScaled(1.2, 1.2, 1.2);
     cout << "pass1: Scaled" << endl;
   } else {
   }
@@ -893,8 +898,6 @@ for (int render=0; render<2; render++) {
 //  if (sten == 0)
   {
     int res = 100;
-//    if (sten == 0)
-//      res = 2;
     for(int i=0; i<res; i++) {
       for(int j=0; j<res; j++) {
         glBegin(GL_QUADS);
@@ -976,7 +979,7 @@ for (int render=0; render<2; render++) {
   for(int i=0; i<eng.num_worms; i++) {
     //cout << "worm: " << i << ": " << eng.worms[i].pos << endl;
     glColor3d(0.2, 0.2, 0.2);
-    drawWorm(eng.worms[i].pos, eng.base.pos, eng.MG_pos, eng.temp_t, &eng, i);
+    drawWorm(eng.worms[i].pos, eng.base.pos, eng.MG_pos, eng.temp_t*eng.worms[i].wiggle_speed_factor, &eng, i);
     glPushMatrix();
     glTranslated(eng.worms[i].pos.x, eng.worms[i].pos.y+1, eng.worms[i].pos.z);
     glColor3d(1.0, 0.0, 0.0);
@@ -1055,7 +1058,7 @@ bool Viewer::on_configure_event(GdkEventConfigure* event)
   glLoadIdentity();
   glViewport(0, 0, event->width, event->height);
   gluPerspective(40.0, (GLfloat)event->width/(GLfloat)event->height, 0.1, 1000.0);
-
+eng->worms[index].
   // Reset to modelview matrix mode
   
   glMatrixMode(GL_MODELVIEW);

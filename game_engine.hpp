@@ -86,13 +86,15 @@ struct particle_system
 struct worm {
   int valid;
   Point3D pos;
+  double wiggle_speed_factor;
   double life;
-  double L;
+  const double L;
   double frac() {
     return life/L;
   }
   int burning;
-  worm() : valid(0), L(10) {}
+  double temp_t;
+  worm() : valid(0), L(30) {}
 };
 
 struct game_engine {
@@ -112,11 +114,12 @@ struct game_engine {
   
   Point3D MG_pos;
   
-  void burnt(int index)
+  void burnt(int index, double temp_t)
   {
     if (!worms[index].burning) {
       worms[index].burning = 1;
-      worms[index].L = worms[index].life = 10;
+      worms[index].temp_t = temp_t;
+      worms[index].life = worms[index].L;
     }
   }
   
@@ -142,6 +145,7 @@ struct game_engine {
       if (!worms[i].valid) {
         worms[i].valid = 1;
         worms[i].burning = 0;
+        worms[i].wiggle_speed_factor = 2 + unif()*8;
         double w = ( (unif()*2.0)-1.0 ) * 0.5*ground.width;
         worms[i].pos.x = base.pos.x + w + (w < 0 ? -1 : 1)*0.5*ground.width;
         
@@ -162,7 +166,7 @@ struct game_engine {
           Vector3D dir = (base.pos-worms[i].pos);
           dir.normalize();
           if ( !( (base.pos-worms[i].pos).length() < thresh) )
-            worms[i].pos = worms[i].pos + 0.1*dir;
+            worms[i].pos = worms[i].pos + 0.2*dir;
             
           if ((base.pos-worms[i].pos).length() < thresh) {
 //            worms[i].valid = 0;
@@ -173,14 +177,14 @@ struct game_engine {
     }
   }
   
-  game_engine() : ps(1000) {
+  game_engine() : ps(500) {
     temp_t = 0;
     ground.x = ground.y = ground.z = 0;
     ground.length = 10;
     ground.width = 20;
     base.pos.x = base.pos.y = base.pos.x = 0;
     base.hit = 0;
-    num_worms = 1;    
+    num_worms = 4;    
   }
 };
 
