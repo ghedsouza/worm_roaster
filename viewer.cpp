@@ -187,6 +187,11 @@ void init(void)
               glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
         // Edit the texture object's image data using the information SDL_Surface gives us
+        for(int i=0; i< (256*128*3); i++)
+        {
+          //((GLubyte*) surface->pixels)[i] += 20;
+        }
+        
         glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0,
                             texture_format, GL_UNSIGNED_BYTE, surface->pixels );
         } 
@@ -310,7 +315,7 @@ void Viewer::on_realize()
    GLfloat mat_specular[] = { 0, 0, 0, 0 };
    GLfloat mat_shininess[] = { 5.0 };
 
-   GLfloat model_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+   GLfloat model_ambient[] = { 0.7, 0.7, 0.7, 1.0 };
 
    glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -339,6 +344,7 @@ void Viewer::on_realize()
       glLightfv(GL_LIGHT1, GL_AMBIENT, color);
 //  glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE ) ;
 #endif
+
   gldrawable->gl_end();
 }
 
@@ -629,13 +635,16 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
     if (r == 0) {
 //      glColor3d(0.3, 0.1, 0.1);
     }
-    glBegin(GL_POLYGON);
-    for(int i=0; i<ring1.size(); i++)
+    if (r == 6)
     {
-      Point3D p = B->at(i);
-      glVertex3d(p.x, p.y, p.z);
+      glBegin(GL_POLYGON);
+      for(int i=0; i<ring1.size(); i++)
+      {
+        Point3D p = B->at(i);
+        glVertex3d(p.x, p.y, p.z);
+      }
+      glEnd();
     }
-    glEnd();
     
     #if 1
     if (r == 1) {
@@ -708,14 +717,28 @@ void drawWorm(Point3D pos, Point3D base, Point3D MG_pos, double temp_t, game_eng
         }
       }
       
-      glColor3d(80.0/255.0, 24.0/255.0, 0);
+//      glColor3d(80.0/255.0, 24.0/255.0, 0);
+      if (eng->worms[index].burning) {
+        glColor3d(2*80.0/255.0, 2*24.0/255.0, 0);
+      } else {
+        glColor3d(2*80.0/255.0, 2*24.0/255.0, 0);
+      }
       
+         glEnable(GL_TEXTURE_2D);
+//   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+         glBindTexture(GL_TEXTURE_2D, texName[2]);
+
+      double bark_s = 0.1;          
       glBegin(GL_POLYGON);
-      glVertex3d(pt1a.x, pt1a.y, pt1a.z);
-      glVertex3d(pt2a.x, pt2a.y, pt2a.z);
-      glVertex3d(pt2b.x, pt2b.y, pt2b.z);
-      glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
+      glTexCoord2d (r*bark_s, r*bark_s); glVertex3d(pt1a.x, pt1a.y, pt1a.z);
+      glTexCoord2d (r*bark_s, r*bark_s + bark_s); glVertex3d(pt2a.x, pt2a.y, pt2a.z);
+      glTexCoord2d (r*bark_s + bark_s/2, bark_s); glVertex3d(pt2b.x, pt2b.y, pt2b.z);
+      glTexCoord2d (r*bark_s + bark_s/2, r*bark_s);  glVertex3d(pt1b.x, pt1b.y, pt1b.z);                  
       glEnd();
+      
+    glDisable(GL_TEXTURE_2D);
     }
     #endif
     vector<Point3D> *tmp = A;
@@ -971,12 +994,14 @@ for (int render=0; render<2; render++) {
     glTranslated(eng.MG_pos.x, eng.MG_pos.y, eng.MG_pos.z);
   glPopMatrix();
 
-  GLfloat light_position[] = { 0, 20.0, 0, 1};
+  GLfloat light_position[] = { 0, 30.0, 0, 1};
+  GLfloat light0_dc[] = { 1, 1, 1, 1};
   glEnable(GL_LIGHT0);
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
+  glLightfv (GL_LIGHT0, GL_DIFFUSE, light0_dc);
+  
   float LightDir[3] = {0.0f, -1, 0};
-  GLfloat color[4] = { 2.0, 1.0, 1.0, 1.0 };
+  GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat position[4] ={ g_x, 80.0, -g_y, 1};
 
   glEnable(GL_LIGHT1);
@@ -995,7 +1020,7 @@ for (int render=0; render<2; render++) {
    glEnable(GL_TEXTURE_2D);
 //   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-   glBindTexture(GL_TEXTURE_2D, texName[2]);
+   glBindTexture(GL_TEXTURE_2D, texName[0]);
   
   glNormal3d(0, 1, 0);
   
@@ -1010,15 +1035,20 @@ for (int render=0; render<2; render++) {
   
 //  if (sten == 0)
   {
+    double gr_f = 1;
     int res = 100;
     for(int i=0; i<res; i++) {
       for(int j=0; j<res; j++) {
         glBegin(GL_QUADS);
-        double l_x = -eng.ground.width+(double(i)/res)*2.0*eng.ground.width;
-        double r_x = l_x + (2.0*eng.ground.width*1.0/res);
         
-        double b_y = -eng.ground.length+(double(j)/res)*2.0*eng.ground.length;
-        double t_y = b_y + (2.0*eng.ground.width*1.0/res);
+        double gr_w = eng.ground.width * gr_f;
+        double gr_l = eng.ground.length * gr_f;
+        
+        double l_x = -gr_w+(double(i)/res)*2.0*gr_w;
+        double r_x = l_x + (2.0*gr_w*1.0/res);
+        
+        double b_y = -gr_l+(double(j)/res)*2.0*gr_l;
+        double t_y = b_y + (2.0*gr_w*1.0/res);
         
         
         double tl_x = (double(i)/res);
