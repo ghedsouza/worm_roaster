@@ -978,8 +978,8 @@ for (int render=0; render<2; render++) {
            (double)scale/(double)SCALE);
 
   // look at the ground from above-back
-//  glTranslated(0.0, -12.0, 0.0);
-  glTranslated(0.0, -8.0, -10.0);
+  glTranslated(0.0, -12.0, 0.0);
+//  glTranslated(0.0, -8.0, -10.0);
   
   if (sten==0) {
     drawMG(-1);
