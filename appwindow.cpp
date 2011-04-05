@@ -26,10 +26,8 @@ update_speed(0)
   // Set up the application menu
   // The slot we use here just causes AppWindow::hide() on this,
   // which shuts down the application.
-  m_menu_app.items().push_back(MenuElem("_New Game", Gtk::AccelKey("n"),
-    sigc::mem_fun(*this, &AppWindow::newgame)));
-  m_menu_app.items().push_back(MenuElem("_Reset", Gtk::AccelKey("r"),
-    sigc::mem_fun(*this, &AppWindow::reset)));
+//  m_menu_app.items().push_back(MenuElem("_New Game", Gtk::AccelKey("n"), sigc::mem_fun(*this, &AppWindow::newgame)));
+  m_menu_app.items().push_back(MenuElem("_Reset", Gtk::AccelKey("r"), sigc::mem_fun(*this, &AppWindow::reset)));
   m_menu_app.items().push_back(MenuElem("_Quit", Gtk::AccelKey("q"),
     sigc::mem_fun(*this, &AppWindow::hide)));
 
@@ -56,9 +54,9 @@ update_speed(0)
 
   // Set up the menu bar
   m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Application", m_menu_app));
-  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Draw Mode", m_menu_draw_mode));
-  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Speed", m_menu_speed));
-  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Buffering", m_menu_buffering));
+//  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Draw Mode", m_menu_draw_mode));
+//  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Speed", m_menu_speed));
+//  m_menubar.items().push_back(Gtk::Menu_Helpers::MenuElem("_Buffering", m_menu_buffering));
 
   // Pack in our widgets
   
